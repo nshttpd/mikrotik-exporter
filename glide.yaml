@@ -1,0 +1,5 @@
+package: github.com/nshttpd/prometheus-mikrotik
+import:
+- package: github.com/prometheus/client_golang
+  version: v0.8.0
+- package: gopkg.in/routeros.v2
