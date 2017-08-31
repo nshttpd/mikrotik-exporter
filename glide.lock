@@ -1,8 +1,10 @@
-hash: c45e99daa5125bb488a17bdab27cccffdc19e3b3270cb70236c22cb9917d344d
-updated: 2017-08-27T23:26:20.061071223-04:00
+hash: 81e7b3e1a90ce2dfd387bb4fffa2c099317bfc2d1fe4080d62ecd5e613ae699f
+updated: 2017-08-30T22:05:18.909857815-04:00
 imports:
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
+- name: go.uber.org/zap
+  version: 9d9d6135afe89b6fc4a05e9a8552526caba38048
 - name: gopkg.in/routeros.v2
   version: ffdb88bba0376a797b733f2279f539340926617f
 testImports: []
