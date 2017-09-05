@@ -1,3 +1,5 @@
+[![Docker Pulls](https://img.shields.io/docker/pulls/nshttpd/mikrotik-exporter.svg)](https://hub.docker.com/r/nshttpd/mikrotik-exporter/)
+
 ## prometheus-mikrotik
 
 tl;dr - prometheus exporter for mikrotik devices
