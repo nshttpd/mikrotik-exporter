@@ -2,6 +2,9 @@
 
 tl;dr - prometheus exporter for mikrotik devices
 
+This is still a work in progress .. consider `master` at the moment as a preview
+release.
+
 #### Description
 
 A Prometheus Exporter for Mikrotik devices. Can be configured to collect metrics
