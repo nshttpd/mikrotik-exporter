@@ -1,0 +1,74 @@
+{
+  "apiVersion": "apps/v1beta1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "mikrotik-exporter",
+    "namespace": "prometheus"
+  },
+  "spec": {
+    "replicas": 1,
+    "revisionHistoryLimit": 5,
+    "strategy": {
+      "type": "Recreate"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "mikrotik-exporter"
+        },
+        "annotations": {
+          "prometheus.io/scrape": "true",
+          "prometheus.io/port": "9090"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "mikrotik-exporter",
+            "image": "nshttpd/mikrotik-exporter:044419a",
+            "env": [
+              {
+                "name": "DEVICE",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "device"
+                  }
+                }
+              },
+              {
+                "name": "ADDRESS",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "address"
+                  }
+                }
+              },
+              {
+                "name": "USER",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "user"
+                  }
+                }
+              },
+              {
+                "name": "PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name" : "mikrotik-exporter",
+                    "key" : "pasword"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+
+
+}
