@@ -21,64 +21,52 @@
           "prometheus.io/port": "9090"
         }
       },
-      "containers": [
-        {
-          "name": "mikrotik-exporter",
-          "image": "nshttpd/mikrotik-exporter:044419a",
-          "env": [
-            {
-              "name": "DEVICE",
-              "valueFrom": {
-                "configMapKeyRef": {
-                  "name": "configmap",
-                  "key": "device"
+      "spec": {
+        "containers": [
+          {
+            "name": "mikrotik-exporter",
+            "image": "nshttpd/mikrotik-exporter:044419a",
+            "env": [
+              {
+                "name": "DEVICE",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "device"
+                  }
+                }
+              },
+              {
+                "name": "ADDRESS",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "address"
+                  }
+                }
+              },
+              {
+                "name": "USER",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "mikrotik-exporter",
+                    "key": "user"
+                  }
+                }
+              },
+              {
+                "name": "PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name" : "mikrotik-exporter",
+                    "key" : "pasword"
+                  }
                 }
               }
-            },
-            {
-              "name": "ADDRESS",
-              "valueFrom": {
-                "configMapKeyRef": {
-                  "name": "configmap",
-                  "key": "address"
-                }
-              }
-            },
-            {
-              "name": "USER",
-              "valueFrom": {
-                "configMapKeyRef": {
-                  "name": "configmap",
-                  "key": "user"
-                }
-              }
-            },
-            {
-              "name": "PASSWORD",
-              "valueFrom": {
-                "secretKeyRef": {
-                  "name" : "secret",
-                  "key" : "pasword"
-                }
-              }
-            }
-          ]
-        }
-      ],
-      "volumes": [
-        {
-          "name": "secret",
-          "secret": {
-            "secretName": "mikrotik-exporter"
+            ]
           }
-        },
-        {
-          "name": "configmap",
-          "configMap": {
-            "name": "mikrotik-exporter"
-          }
-        }
-      ]
+        ]
+      }
     }
   }
 
