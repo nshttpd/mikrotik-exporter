@@ -1,7 +1,9 @@
-package exporter
+package collector
 
 import (
 	"fmt"
+
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -17,10 +19,12 @@ func (c *Config) FromFlags(device, address, user, password *string) error {
 	}
 
 	d := &Device{
-		Address:  *address,
-		Name:     *device,
-		User:     *user,
-		Password: *password,
+		address:  *address,
+		name:     *device,
+		user:     *user,
+		password: *password,
+		iDesc:    map[string]*prometheus.Desc{},
+		rDesc:    map[string]*prometheus.Desc{},
 	}
 
 	*c = Config{

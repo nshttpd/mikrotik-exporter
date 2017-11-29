@@ -1,33 +1,17 @@
-package exporter
+package collector
 
 import (
-	"strings"
-
 	"fmt"
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-	"net/http"
-)
-
-const (
-	promNamespace = "mikrotik"
-)
-
-var (
-	interfaceLabelNames = []string{"name", "address", "interface"}
-	InterfaceProps      = []string{"name", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
-	resourceLabelNames  = []string{"name", "address"}
-	ResourceProps       = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
 )
 
 type PromMetrics struct {
 	InterfaceMetrics map[string]*prometheus.CounterVec
 	ResourceMetrics  map[string]*prometheus.GaugeVec
-}
-
-func metricStringCleanup(in string) string {
-	return strings.Replace(in, "-", "_", -1)
 }
 
 func (p *PromMetrics) makeLabels(name, address string) prometheus.Labels {
@@ -51,7 +35,7 @@ func (p *PromMetrics) SetupPrometheus(l zap.SugaredLogger) (http.Handler, error)
 	for _, v := range InterfaceProps {
 		n := metricStringCleanup(v)
 		c := prometheus.NewCounterVec(prometheus.CounterOpts{
-			Namespace: promNamespace,
+			Namespace: namespace,
 			Subsystem: "interface",
 			Name:      n,
 			Help:      fmt.Sprintf("Interface %s counter", v),
@@ -72,7 +56,7 @@ func (p *PromMetrics) SetupPrometheus(l zap.SugaredLogger) (http.Handler, error)
 	for _, v := range ResourceProps {
 		n := metricStringCleanup(v)
 		c := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: promNamespace,
+			Namespace: namespace,
 			Subsystem: "resource",
 			Name:      n,
 			Help:      fmt.Sprintf("Resource %s counter", v),
