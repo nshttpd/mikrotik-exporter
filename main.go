@@ -3,10 +3,15 @@ package main
 import (
 	"flag"
 	"os"
-	"os/signal"
 
-	"github.com/nshttpd/mikrotik-exporter/exporter"
+	"fmt"
+	"net/http"
+
+	"github.com/nshttpd/mikrotik-exporter/collector"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
+	"github.com/prometheus/common/version"
 	"go.uber.org/zap"
 )
 
@@ -19,10 +24,45 @@ var (
 	cfgFile         = flag.String("config", "", "config file for multiple devices")
 	logLevel        = flag.String("log-level", "info", "log level")
 	port            = flag.String("port", ":9090", "port number to listen on")
+	metricsPath     = flag.String("path", "/metrics", "path to answer requests on")
 	currentLogLevel = zap.NewAtomicLevelAt(zap.InfoLevel)
+	cfg             collector.Config
 )
 
-// (nshttpd) TODO figure out if we need a caching option
+func init() {
+	prometheus.MustRegister(version.NewCollector("mikrotik_exporter"))
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	nc, err := collector.NewDeviceCollector(cfg)
+	if err != nil {
+		log.Warnln("Couldn't create", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("Couldn't create %s", err)))
+		return
+	}
+
+	registry := prometheus.NewRegistry()
+	err = registry.Register(nc)
+	if err != nil {
+		log.Errorln("Couldn't register collector:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Couldn't register collector: %s", err)))
+		return
+	}
+
+	gatherers := prometheus.Gatherers{
+		prometheus.DefaultGatherer,
+		registry,
+	}
+	// Delegate http serving to Prometheus client library, which will call collector.Collect.
+	h := promhttp.HandlerFor(gatherers,
+		promhttp.HandlerOpts{
+			ErrorLog:      log.NewErrorLogger(),
+			ErrorHandling: promhttp.ContinueOnError,
+		})
+	h.ServeHTTP(w, r)
+}
 
 func main() {
 	flag.Parse()
@@ -42,7 +82,6 @@ func main() {
 	}
 	defer l.Sync()
 
-	var cfg exporter.Config
 	if *cfgFile == "" {
 		if err := cfg.FromFlags(device, address, user, password); err != nil {
 			l.Sugar().Errorw("could not create configuration",
@@ -57,31 +96,25 @@ func main() {
 
 	cfg.Logger = l.Sugar()
 
-	cfg.Metrics = exporter.PromMetrics{}
-	mh, err := cfg.Metrics.SetupPrometheus(*cfg.Logger)
+	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+			<head><title>Mikrotik Exporter</title></head>
+			<body>
+			<h1>Mikrotik Exporter</h1>
+			<p><a href="` + *metricsPath + `">Metrics</a></p>
+			</body>
+			</html>`))
+	})
+
+	log.Infoln("Listening on", *port)
+	err = http.ListenAndServe(*port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	s := &exporter.Server{}
-
-	if err := s.Run(cfg, mh, port); err != nil {
-		log.Fatal(err)
-	}
-
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, os.Interrupt, os.Kill)
-	<-sigchan
-	cfg.Logger.Info("stopping server")
-	err = s.Stop()
-	if err != nil {
-		cfg.Logger.Errorw("error while stopping service",
-			"error", err,
-		)
-		os.Exit(1)
-	}
-
-	os.Exit(0)
 
 }
 
