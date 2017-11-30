@@ -4,13 +4,10 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 type Config struct {
 	Devices []Device
-	Logger  *zap.SugaredLogger
-	Metrics PromMetrics
 }
 
 func (c *Config) FromFlags(device, address, user, password *string) error {

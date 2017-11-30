@@ -10,23 +10,22 @@ import (
 	"github.com/nshttpd/mikrotik-exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
-	"go.uber.org/zap"
+	log "github.com/sirupsen/logrus"
 )
 
 // single device can be defined via CLI flags, mutliple via config file.
 var (
-	device          = flag.String("device", "", "single device to monitor")
-	address         = flag.String("address", "", "address of the device to monitor")
-	user            = flag.String("user", "", "user for authentication with single device")
-	password        = flag.String("password", "", "password for authentication for single device")
-	cfgFile         = flag.String("config", "", "config file for multiple devices")
-	logLevel        = flag.String("log-level", "info", "log level")
-	port            = flag.String("port", ":9090", "port number to listen on")
-	metricsPath     = flag.String("path", "/metrics", "path to answer requests on")
-	currentLogLevel = zap.NewAtomicLevelAt(zap.InfoLevel)
-	cfg             collector.Config
+	device      = flag.String("device", "", "single device to monitor")
+	address     = flag.String("address", "", "address of the device to monitor")
+	user        = flag.String("user", "", "user for authentication with single device")
+	password    = flag.String("password", "", "password for authentication for single device")
+	cfgFile     = flag.String("config", "", "config file for multiple devices")
+	logLevel    = flag.String("log-level", "info", "log level")
+	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
+	port        = flag.String("port", ":9090", "port number to listen on")
+	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
+	cfg         collector.Config
 )
 
 func init() {
@@ -58,7 +57,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
 	h := promhttp.HandlerFor(gatherers,
 		promhttp.HandlerOpts{
-			ErrorLog:      log.NewErrorLogger(),
+			ErrorLog:      log.New(),
 			ErrorHandling: promhttp.ContinueOnError,
 		})
 	h.ServeHTTP(w, r)
@@ -68,33 +67,28 @@ func main() {
 	flag.Parse()
 
 	// override default log level of info
+	var ll log.Level
+	var err error
+	ll = log.InfoLevel
 	if *logLevel != "info" {
-		err := currentLogLevel.UnmarshalText([]byte(*logLevel))
+		ll, err = log.ParseLevel(*logLevel)
 		if err != nil {
 			panic(err)
 		}
 	}
-
-	// setup logger
-	l, err := newLogger(currentLogLevel)
-	if err != nil {
-		panic(err)
-	}
-	defer l.Sync()
+	log.SetLevel(ll)
 
 	if *cfgFile == "" {
 		if err := cfg.FromFlags(device, address, user, password); err != nil {
-			l.Sugar().Errorw("could not create configuration",
-				"error", err,
-			)
-			return
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("could not create configuration")
+			os.Exit(1)
 		}
 	} else {
-		l.Sugar().Info("config file not supported yet")
+		log.Info("config file not supported yet")
 		os.Exit(0)
 	}
-
-	cfg.Logger = l.Sugar()
 
 	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -110,16 +104,10 @@ func main() {
 			</html>`))
 	})
 
-	log.Infoln("Listening on", *port)
+	log.Info("Listening on", *port)
 	err = http.ListenAndServe(*port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-}
-
-func newLogger(lvl zap.AtomicLevel) (*zap.Logger, error) {
-	config := zap.NewProductionConfig()
-	config.Level = lvl
-	return config.Build()
 }

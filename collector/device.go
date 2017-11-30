@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2"
 	"gopkg.in/routeros.v2/proto"
 )
@@ -37,19 +38,18 @@ func metricStringCleanup(in string) string {
 }
 
 func (d *Device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
-	// clean up logging later TODO(smb)
-	//l.Debugw("fetching interface metrics",
-	//	"device", d.name,
-	//)
+
+	log.WithFields(log.Fields{
+		"device": d.name,
+	}).Debug("fetching interface metrics")
 
 	// grab a connection to the device
 	c, err := routeros.Dial(d.address+apiPort, d.user, d.password)
 	if err != nil {
-		// clean up logging later TODO(smb)
-		//l.Errorw("error dialing device",
-		//	"device", d.name,
-		//	"error", err,
-		//)
+		log.WithFields(log.Fields{
+			"device": d.name,
+			"error":  err,
+		}).Error("error dialing device")
 		return nil, err
 	}
 	defer c.Close()
@@ -57,32 +57,14 @@ func (d *Device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
 	reply, err := c.Run("/interface/print", "?disabled=false",
 		"?running=true", "=.proplist="+strings.Join(InterfaceProps, ","))
 	if err != nil {
-		// do some logging here about an error when we redo all the logging TODO(smb)
+		log.WithFields(log.Fields{
+			"device": d.name,
+			"error":  err,
+		}).Error("error fetching interface metrics")
 		return nil, err
 	}
 
 	return reply.Re, nil
-
-	//for _, re := range reply.Re {
-	//	var name string
-	//	// name should always be first element on the array
-	//	for _, p := range InterfaceProps {
-	//		if p == "name" {
-	//			name = re.Map[p]
-	//		} else {
-	//			v, err := strconv.ParseFloat(re.Map[p], 64)
-	//			if err != nil {
-	//				l.Errorw("error parsing value to float",
-	//					"device", d.name,
-	//					"property", p,
-	//					"value", re.Map[p],
-	//					"error", err,
-	//				)
-	//			}
-	//			m.IncrementInterface(p, d.name, d.address, name, v)
-	//		}
-	//	}
-	//}
 }
 
 func (d *Device) Update(ch chan<- prometheus.Metric) error {
@@ -109,7 +91,15 @@ func (d *Device) Update(ch chan<- prometheus.Metric) error {
 					v, err := strconv.ParseFloat(re.Map[p], 64)
 					if err == nil {
 						ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, d.name, d.address, intf)
-					} // add an else with logging here when logging is re done TODO(smb)
+					} else {
+						log.WithFields(log.Fields{
+							"device":    d.name,
+							"interface": intf,
+							"property":  p,
+							"value":     re.Map[p],
+							"error":     err,
+						}).Error("error parsing interface metric value")
+					}
 				}
 			}
 		}

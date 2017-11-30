@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 )
 
 const namespace = "mikrotik"
@@ -32,9 +32,9 @@ type deviceCollector struct {
 func NewDeviceCollector(cfg Config) (*deviceCollector, error) {
 	devices := make([]Device, len(cfg.Devices))
 
-	cfg.Logger.Info("setting up collector for devices",
-		"numDevices", len(cfg.Devices),
-	)
+	log.WithFields(log.Fields{
+		"numDevices": len(cfg.Devices),
+	}).Info("setting up collector for devices")
 
 	copy(devices, cfg.Devices)
 
