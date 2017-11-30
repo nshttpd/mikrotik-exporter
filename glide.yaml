@@ -1,10 +1,6 @@
-package: github.com/nshttpd/prometheus-mikrotik
+package: github.com/nshttpd/mikrotik-exporter
 import:
 - package: github.com/prometheus/client_golang
   version: v0.8.0
 - package: gopkg.in/routeros.v2
-- package: go.uber.org/zap
-  version: ~1.5.0
-- package: go.uber.org/atomic
-  version: ~1.2.0
 - package: github.com/sirupsen/logrus
