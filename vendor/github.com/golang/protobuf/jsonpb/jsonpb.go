@@ -193,8 +193,7 @@ func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent, typeU
 			// "Generated output always contains 3, 6, or 9 fractional digits,
 			//  depending on required precision."
 			s, ns := s.Field(0).Int(), s.Field(1).Int()
-			d := time.Duration(s)*time.Second + time.Duration(ns)*time.Nanosecond
-			x := fmt.Sprintf("%.9f", d.Seconds())
+			x := fmt.Sprintf("%d.%09d", s, ns)
 			x = strings.TrimSuffix(x, "000")
 			x = strings.TrimSuffix(x, "000")
 			out.write(`"`)
@@ -673,7 +672,8 @@ func (u *Unmarshaler) unmarshalValue(target reflect.Value, inputValue json.RawMe
 	if targetType.Kind() == reflect.Ptr {
 		// If input value is "null" and target is a pointer type, then the field should be treated as not set
 		// UNLESS the target is structpb.Value, in which case it should be set to structpb.NullValue.
-		if string(inputValue) == "null" && targetType != reflect.TypeOf(&stpb.Value{}) {
+		_, isJSONPBUnmarshaler := target.Interface().(JSONPBUnmarshaler)
+		if string(inputValue) == "null" && targetType != reflect.TypeOf(&stpb.Value{}) && !isJSONPBUnmarshaler {
 			return nil
 		}
 		target.Set(reflect.New(targetType.Elem()))
