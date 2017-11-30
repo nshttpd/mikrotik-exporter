@@ -6,7 +6,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
 )
 
 type PromMetrics struct {
@@ -27,7 +26,7 @@ func (p *PromMetrics) makeInterfaceLabels(name, address, intf string) prometheus
 	return l
 }
 
-func (p *PromMetrics) SetupPrometheus(l zap.SugaredLogger) (http.Handler, error) {
+func (p *PromMetrics) SetupPrometheus() (http.Handler, error) {
 
 	p.InterfaceMetrics = make(map[string]*prometheus.CounterVec)
 	p.ResourceMetrics = make(map[string]*prometheus.GaugeVec)
@@ -42,10 +41,10 @@ func (p *PromMetrics) SetupPrometheus(l zap.SugaredLogger) (http.Handler, error)
 		}, interfaceLabelNames)
 
 		if err := prometheus.Register(c); err != nil {
-			l.Errorw("error creating interface counter vector",
-				"property", v,
-				"error", err,
-			)
+			//l.Errorw("error creating interface counter vector",
+			//	"property", v,
+			//	"error", err,
+			//)
 			return nil, err
 		}
 
@@ -63,10 +62,10 @@ func (p *PromMetrics) SetupPrometheus(l zap.SugaredLogger) (http.Handler, error)
 		}, resourceLabelNames)
 
 		if err := prometheus.Register(c); err != nil {
-			l.Errorw("error creating resource counter vec",
-				"property", v,
-				"error", err,
-			)
+			//l.Errorw("error creating resource counter vec",
+			//	"property", v,
+			//	"error", err,
+			//)
 			return nil, err
 		}
 		p.ResourceMetrics[v] = c

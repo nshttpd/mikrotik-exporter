@@ -8,7 +8,6 @@ import (
 
 type Config struct {
 	Devices []Device
-	Metrics PromMetrics
 }
 
 func (c *Config) FromFlags(device, address, user, password *string) error {
