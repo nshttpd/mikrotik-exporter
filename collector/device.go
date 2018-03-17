@@ -7,6 +7,7 @@ import (
 
 	"strconv"
 
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2"
@@ -19,35 +20,39 @@ const (
 
 var (
 	interfaceLabelNames = []string{"name", "address", "interface"}
-	InterfaceProps      = []string{"name", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
+	interfaceProps      = []string{"name", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
 	resourceLabelNames  = []string{"name", "address"}
-	ResourceProps       = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
+	resourceProps       = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
 )
 
-type Device struct {
-	address  string
-	name     string
-	user     string
-	password string
-	iDesc    map[string]*prometheus.Desc // interface level descriptions for device
-	rDesc    map[string]*prometheus.Desc // resource level descriptions for device
+type device struct {
+	config.Device
+	interfaceDesc map[string]*prometheus.Desc
+	ressourceDesc map[string]*prometheus.Desc
+}
+
+func devicesForConfig(cfg *config.Config) []*device {
+	devices := make([]*device, len(cfg.Devices))
+	for i, d := range cfg.Devices {
+		devices[i] = &device{d, make(map[string]*prometheus.Desc), make(map[string]*prometheus.Desc)}
+	}
+
+	return devices
 }
 
 func metricStringCleanup(in string) string {
 	return strings.Replace(in, "-", "_", -1)
 }
 
-func (d *Device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
-
+func (d *device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
 	log.WithFields(log.Fields{
-		"device": d.name,
+		"device": d.Name,
 	}).Debug("fetching interface metrics")
 
-	// grab a connection to the device
-	c, err := routeros.Dial(d.address+apiPort, d.user, d.password)
+	c, err := routeros.Dial(d.Address+apiPort, d.User, d.Password)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device": d.name,
+			"device": d.Name,
 			"error":  err,
 		}).Error("error dialing device")
 		return nil, err
@@ -55,10 +60,10 @@ func (d *Device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
 	defer c.Close()
 
 	reply, err := c.Run("/interface/print", "?disabled=false",
-		"?running=true", "=.proplist="+strings.Join(InterfaceProps, ","))
+		"?running=true", "=.proplist="+strings.Join(interfaceProps, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device": d.name,
+			"device": d.Name,
 			"error":  err,
 		}).Error("error fetching interface metrics")
 		return nil, err
@@ -67,42 +72,59 @@ func (d *Device) fetchInterfaceMetrics() ([]*proto.Sentence, error) {
 	return reply.Re, nil
 }
 
-func (d *Device) Update(ch chan<- prometheus.Metric) error {
-
+func (d *device) Update(ch chan<- prometheus.Metric) error {
 	stats, err := d.fetchInterfaceMetrics()
-	// if there is no error, deal with the response
-	if err == nil {
-		for _, re := range stats {
-			var intf string
-			for _, p := range InterfaceProps {
-				if p == "name" {
-					intf = re.Map[p]
-				} else {
-					desc, ok := d.iDesc[p]
-					if !ok {
-						desc = prometheus.NewDesc(
-							prometheus.BuildFQName(namespace, "interface", metricStringCleanup(p)),
-							fmt.Sprintf("interface property statistic %s", p),
-							interfaceLabelNames,
-							nil,
-						)
-						d.iDesc[p] = desc
-					}
-					v, err := strconv.ParseFloat(re.Map[p], 64)
-					if err == nil {
-						ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, d.name, d.address, intf)
-					} else {
-						log.WithFields(log.Fields{
-							"device":    d.name,
-							"interface": intf,
-							"property":  p,
-							"value":     re.Map[p],
-							"error":     err,
-						}).Error("error parsing interface metric value")
-					}
-				}
-			}
+	if err != nil {
+		return err
+	}
+
+	for _, re := range stats {
+		d.updateForStat(re, ch)
+	}
+
+	return nil
+}
+
+func (d *device) updateForStat(re *proto.Sentence, ch chan<- prometheus.Metric) {
+	var intf string
+	for _, p := range interfaceProps {
+		if p == "name" {
+			intf = re.Map[p]
+		} else {
+			d.updateWithProperty(p, intf, re, ch)
 		}
 	}
-	return nil
+}
+
+func (d *device) updateWithProperty(property, intf string, re *proto.Sentence, ch chan<- prometheus.Metric) {
+	desc := d.descriptionForPropery(property)
+	v, err := strconv.ParseFloat(re.Map[property], 64)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"device":    d.Name,
+			"interface": intf,
+			"property":  property,
+			"value":     re.Map[property],
+			"error":     err,
+		}).Error("error parsing interface metric value")
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, d.Name, d.Address, intf)
+}
+
+func (d *device) descriptionForPropery(property string) *prometheus.Desc {
+	desc, ok := d.interfaceDesc[property]
+	if ok {
+		return desc
+	}
+
+	desc = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "interface", metricStringCleanup(property)),
+		fmt.Sprintf("interface property statistic %s", property),
+		interfaceLabelNames,
+		nil,
+	)
+	d.interfaceDesc[property] = desc
+	return desc
 }
