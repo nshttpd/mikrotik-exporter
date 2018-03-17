@@ -16,6 +16,9 @@ func TestShouldParse(t *testing.T) {
 	if len(c.Devices) != 2 {
 		t.Fatalf("expected 2 devices, got %v", len(c.Devices))
 	}
+
+	assertConfig("test1", "192.168.1.1", "foo", "bar", c.Devices[0], t)
+	assertConfig("test2", "192.168.2.1", "test", "123", c.Devices[1], t)
 }
 
 func loadTestFile(t *testing.T) []byte {
@@ -25,4 +28,22 @@ func loadTestFile(t *testing.T) []byte {
 	}
 
 	return b
+}
+
+func assertConfig(name, address, user, password string, c Device, t *testing.T) {
+	if c.Name != name {
+		t.Fatalf("expected name %s, got %s", name, c.Name)
+	}
+
+	if c.Address != address {
+		t.Fatalf("expected address %s, got %s", address, c.Address)
+	}
+
+	if c.User != user {
+		t.Fatalf("expected user %s, got %s", user, c.User)
+	}
+
+	if c.Password != password {
+		t.Fatalf("expected password %s, got %s", password, c.Password)
+	}
 }
