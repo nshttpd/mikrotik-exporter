@@ -13,7 +13,7 @@ import (
 
 var (
 	bgpabelNames    = []string{"name", "address", "session", "asn"}
-	bgpProps        = []string{"name", "remote-as", "state"}
+	bgpProps        = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
 	bgpDescriptions map[string]*prometheus.Desc
 )
 
@@ -25,6 +25,9 @@ func init() {
 		bgpabelNames,
 		nil,
 	)
+	for _, p := range bgpProps[3:] {
+		bgpDescriptions[p] = descriptionForPropertyName("bgp", p, bgpabelNames)
+	}
 }
 
 type bgpCollector struct {
@@ -98,6 +101,10 @@ func (c *bgpCollector) parseValueForProperty(property, value string) (float64, e
 			return 1, nil
 		}
 
+		return 0, nil
+	}
+
+	if value == "" {
 		return 0, nil
 	}
 
