@@ -35,15 +35,34 @@ type collector struct {
 	collectors []metricCollector
 }
 
-func NewCollector(cfg *config.Config) (*collector, error) {
+func WithBGP() CollectorOption {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &bgpCollector{})
+	}
+}
+
+// CollectorOption applies options to collector
+type CollectorOption func(*collector)
+
+// NewCollector creates a collector instance
+func NewCollector(cfg *config.Config, opts ...CollectorOption) (*collector, error) {
 	log.WithFields(log.Fields{
 		"numDevices": len(cfg.Devices),
 	}).Info("setting up collector for devices")
 
-	return &collector{
-		devices:    cfg.Devices,
-		collectors: []metricCollector{&interfaceCollector{}, &resourceCollector{}},
-	}, nil
+	c := &collector{
+		devices: cfg.Devices,
+		collectors: []metricCollector{
+			&interfaceCollector{},
+			&resourceCollector{},
+		},
+	}
+
+	for _, o := range opts {
+		o(c)
+	}
+
+	return c, nil
 }
 
 // Describe implements the prometheus.Collector interface.

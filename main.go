@@ -28,6 +28,7 @@ var (
 	port        = flag.String("port", ":9090", "port number to listen on")
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
+	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
 	cfg         *config.Config
 )
 
@@ -115,7 +116,13 @@ func startServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	nc, err := collector.NewCollector(cfg)
+	opts := []collector.CollectorOption{}
+
+	if *withBgp {
+		opts = append(opts, collector.WithBGP())
+	}
+
+	nc, err := collector.NewCollector(cfg, opts...)
 	if err != nil {
 		log.Warnln("Couldn't create", err)
 		w.WriteHeader(http.StatusBadRequest)
