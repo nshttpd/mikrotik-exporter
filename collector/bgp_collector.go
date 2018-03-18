@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	bgpabelNames    = []string{"name", "address", "session"}
-	bgpProps        = []string{"name", "state"}
+	bgpabelNames    = []string{"name", "address", "session", "asn"}
+	bgpProps        = []string{"name", "remote-as", "state"}
 	bgpDescriptions map[string]*prometheus.Desc
 )
 
@@ -63,17 +63,19 @@ func (c *bgpCollector) fetch(client *routeros.Client, device *config.Device) ([]
 }
 
 func (c *bgpCollector) collectForStat(re *proto.Sentence, device *config.Device, ch chan<- prometheus.Metric) {
-	var session string
+	var session, asn string
 	for _, p := range bgpProps {
 		if p == "name" {
 			session = re.Map[p]
+		} else if p == "remote-as" {
+			asn = re.Map[p]
 		} else {
-			c.collectMetricForProperty(p, session, device, re, ch)
+			c.collectMetricForProperty(p, session, asn, device, re, ch)
 		}
 	}
 }
 
-func (c *bgpCollector) collectMetricForProperty(property, session string, device *config.Device, re *proto.Sentence, ch chan<- prometheus.Metric) {
+func (c *bgpCollector) collectMetricForProperty(property, session, asn string, device *config.Device, re *proto.Sentence, ch chan<- prometheus.Metric) {
 	desc := bgpDescriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {
@@ -87,7 +89,7 @@ func (c *bgpCollector) collectMetricForProperty(property, session string, device
 		return
 	}
 
-	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, device.Name, device.Address, session)
+	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, device.Name, device.Address, session, asn)
 }
 
 func (c *bgpCollector) parseValueForProperty(property, value string) (float64, error) {
