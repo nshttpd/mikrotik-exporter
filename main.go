@@ -139,13 +139,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gatherers := prometheus.Gatherers{
-		prometheus.DefaultGatherer,
-		registry,
-	}
-
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
-	h := promhttp.HandlerFor(gatherers,
+	h := promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
 			ErrorLog:      log.New(),
 			ErrorHandling: promhttp.ContinueOnError,
