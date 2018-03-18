@@ -115,7 +115,7 @@ func startServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	nc, err := collector.NewDeviceCollector(cfg)
+	nc, err := collector.NewCollector(cfg)
 	if err != nil {
 		log.Warnln("Couldn't create", err)
 		w.WriteHeader(http.StatusBadRequest)
