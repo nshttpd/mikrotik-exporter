@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	namespace = "mikrotik"
-	apiPort   = ":8728"
+	namespace  = "mikrotik"
+	apiPort    = ":8728"
+	apiPortTLS = ":8729"
 
 	// DefaultTimeout defines the default timeout when connecting to a router
 	DefaultTimeout = 5 * time.Second
@@ -162,5 +163,5 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 	tls := &tls.Config{
 		InsecureSkipVerify: c.insecureTLS,
 	}
-	return routeros.DialTLSTimeout(d.Address+apiPort, d.User, d.Password, tls, c.timeout)
+	return routeros.DialTLSTimeout(d.Address+apiPortTLS, d.User, d.Password, tls, c.timeout)
 }
