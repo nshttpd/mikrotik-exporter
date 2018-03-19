@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"fmt"
 	"net/http"
@@ -29,6 +30,7 @@ var (
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
+	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to a server")
 	cfg         *config.Config
 )
 
@@ -120,6 +122,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if *withBgp {
 		opts = append(opts, collector.WithBGP())
+	}
+
+	if *timeout != collector.DefaultTimeout {
+		opts = append(opts, collector.WithTimeout(*timeout))
 	}
 
 	nc, err := collector.NewCollector(cfg, opts...)

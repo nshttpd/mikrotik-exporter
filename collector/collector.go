@@ -13,6 +13,9 @@ import (
 const (
 	namespace = "mikrotik"
 	apiPort   = ":8728"
+
+	// DefaultTimeout defines the default timeout when connecting to a router
+	DefaultTimeout = 5 * time.Second
 )
 
 var (
@@ -33,11 +36,20 @@ var (
 type collector struct {
 	devices    []config.Device
 	collectors []metricCollector
+	timeout    time.Duration
 }
 
+// WithBGP enables BGP routing metrics
 func WithBGP() CollectorOption {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, &bgpCollector{})
+	}
+}
+
+// WithTimeout sets timeout for connecting to router
+func WithTimeout(d time.Duration) CollectorOption {
+	return func(c *collector) {
+		c.timeout = d
 	}
 }
 
@@ -52,6 +64,7 @@ func NewCollector(cfg *config.Config, opts ...CollectorOption) (*collector, erro
 
 	c := &collector{
 		devices: cfg.Devices,
+		timeout: DefaultTimeout,
 		collectors: []metricCollector{
 			&interfaceCollector{},
 			&resourceCollector{},
@@ -110,7 +123,7 @@ func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metri
 }
 
 func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Metric) error {
-	cl, err := routeros.Dial(d.Address+apiPort, d.User, d.Password)
+	cl, err := routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": d.Name,
