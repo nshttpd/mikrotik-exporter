@@ -118,7 +118,7 @@ func startServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	opts := []collector.CollectorOption{}
+	opts := []collector.Option{}
 
 	if *withBgp {
 		opts = append(opts, collector.WithBGP())

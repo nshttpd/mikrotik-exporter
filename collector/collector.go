@@ -40,24 +40,24 @@ type collector struct {
 }
 
 // WithBGP enables BGP routing metrics
-func WithBGP() CollectorOption {
+func WithBGP() Option {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, &bgpCollector{})
 	}
 }
 
 // WithTimeout sets timeout for connecting to router
-func WithTimeout(d time.Duration) CollectorOption {
+func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {
 		c.timeout = d
 	}
 }
 
-// CollectorOption applies options to collector
-type CollectorOption func(*collector)
+// Option applies options to collector
+type Option func(*collector)
 
 // NewCollector creates a collector instance
-func NewCollector(cfg *config.Config, opts ...CollectorOption) (*collector, error) {
+func NewCollector(cfg *config.Config, opts ...Option) (prometheus.Collector, error) {
 	log.WithFields(log.Fields{
 		"numDevices": len(cfg.Devices),
 	}).Info("setting up collector for devices")
