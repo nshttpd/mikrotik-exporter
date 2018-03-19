@@ -81,19 +81,19 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	wg.Add(len(c.devices))
 
 	for _, dev := range c.devices {
-		go func(d *config.Device) {
+		go func(d config.Device) {
 			c.collectForDevice(d, ch)
 			wg.Done()
-		}(&dev)
+		}(dev)
 	}
 
 	wg.Wait()
 }
 
-func (c *collector) collectForDevice(d *config.Device, ch chan<- prometheus.Metric) {
+func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metric) {
 	begin := time.Now()
 
-	err := c.connectAndCollect(d, ch)
+	err := c.connectAndCollect(&d, ch)
 
 	duration := time.Since(begin)
 	var success float64
