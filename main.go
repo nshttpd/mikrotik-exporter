@@ -30,7 +30,9 @@ var (
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
-	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to a server")
+	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
+	tls         = flag.Bool("tls", false, "use tls to connect to routers")
+	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
 	cfg         *config.Config
 )
 
@@ -118,16 +120,7 @@ func startServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	opts := []collector.Option{}
-
-	if *withBgp {
-		opts = append(opts, collector.WithBGP())
-	}
-
-	if *timeout != collector.DefaultTimeout {
-		opts = append(opts, collector.WithTimeout(*timeout))
-	}
-
+	opts := collectorOptions()
 	nc, err := collector.NewCollector(cfg, opts...)
 	if err != nil {
 		log.Warnln("Couldn't create", err)
@@ -152,4 +145,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			ErrorHandling: promhttp.ContinueOnError,
 		})
 	h.ServeHTTP(w, r)
+}
+
+func collectorOptions() []collector.Option {
+	opts := []collector.Option{}
+
+	if *withBgp {
+		opts = append(opts, collector.WithBGP())
+	}
+
+	if *timeout != collector.DefaultTimeout {
+		opts = append(opts, collector.WithTimeout(*timeout))
+	}
+
+	if *tls {
+		opts = append(opts, collector.WithTLS(*insecure))
+	}
+
+	return opts
 }

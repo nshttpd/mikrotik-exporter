@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"crypto/tls"
 	"sync"
 	"time"
 
@@ -34,9 +35,11 @@ var (
 )
 
 type collector struct {
-	devices    []config.Device
-	collectors []metricCollector
-	timeout    time.Duration
+	devices     []config.Device
+	collectors  []metricCollector
+	timeout     time.Duration
+	enableTLS   bool
+	insecureTLS bool
 }
 
 // WithBGP enables BGP routing metrics
@@ -50,6 +53,14 @@ func WithBGP() Option {
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {
 		c.timeout = d
+	}
+}
+
+// WithTLS enables TLS
+func WithTLS(insecure bool) Option {
+	return func(c *collector) {
+		c.enableTLS = true
+		c.insecureTLS = true
 	}
 }
 
@@ -123,7 +134,7 @@ func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metri
 }
 
 func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Metric) error {
-	cl, err := routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
+	cl, err := c.connect(d)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": d.Name,
@@ -141,4 +152,15 @@ func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Met
 	}
 
 	return nil
+}
+
+func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
+	if !c.enableTLS {
+		return routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
+	}
+
+	tls := &tls.Config{
+		InsecureSkipVerify: c.insecureTLS,
+	}
+	return routeros.DialTLSTimeout(d.Address+apiPort, d.User, d.Password, tls, c.timeout)
 }
