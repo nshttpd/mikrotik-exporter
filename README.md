@@ -35,6 +35,25 @@ where `address` is the address of your router. `device` is the label name for th
 in the metrics output to prometheus. The `user` and `password` are the ones you
 created for the exporter to use to access the API.
 
+#### Config File
+
+`./mikrotik-exporter -config-file config.yml`
+
+where `config-file` is the path to a config file in YAML format.
+
+###### example config
+```
+devices:
+  - name: my_router
+    address: 10.10.0.1
+    user: prometheus
+    password: changeme
+  - name: my_second_router
+    address: 10.10.0.2
+    user: prometheus2
+    password: password_to_second_router
+```
+
 ###### example output
 
 ```
