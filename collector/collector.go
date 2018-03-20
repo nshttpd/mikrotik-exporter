@@ -50,6 +50,13 @@ func WithBGP() Option {
 	}
 }
 
+// WithRoutes enables routing table metrics
+func WithRoutes() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &routesCollector{})
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {

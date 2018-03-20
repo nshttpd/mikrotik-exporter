@@ -30,6 +30,7 @@ var (
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
+	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
@@ -152,6 +153,10 @@ func collectorOptions() []collector.Option {
 
 	if *withBgp {
 		opts = append(opts, collector.WithBGP())
+	}
+
+	if *withRoutes {
+		opts = append(opts, collector.WithRoutes())
 	}
 
 	if *timeout != collector.DefaultTimeout {
