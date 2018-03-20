@@ -73,8 +73,9 @@ func (c *routesCollector) colllectCount(client *routeros.Client, device *config.
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device": device.Name,
-			"error":  err,
+			"ip_version": ipVersion,
+			"device":     device.Name,
+			"error":      err,
 		}).Error("error parsing routes metrics")
 		return
 	}
@@ -97,9 +98,10 @@ func (c *routesCollector) colllectCountProtcol(client *routeros.Client, device *
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"protocol": protocol,
-			"device":   device.Name,
-			"error":    err,
+			"ip_version": ipVersion,
+			"protocol":   protocol,
+			"device":     device.Name,
+			"error":      err,
 		}).Error("error parsing routes metrics")
 		return
 	}
