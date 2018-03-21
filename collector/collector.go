@@ -1,14 +1,24 @@
 package collector
 
 import (
+	"crypto/tls"
 	"sync"
 	"time"
 
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	routeros "gopkg.in/routeros.v2"
 )
 
-const namespace = "mikrotik"
+const (
+	namespace  = "mikrotik"
+	apiPort    = ":8728"
+	apiPortTLS = ":8729"
+
+	// DefaultTimeout defines the default timeout when connecting to a router
+	DefaultTimeout = 5 * time.Second
+)
 
 var (
 	scrapeDurationDesc = prometheus.NewDesc(
@@ -25,54 +35,140 @@ var (
 	)
 )
 
-type deviceCollector struct {
-	Devices []Device
+type collector struct {
+	devices     []config.Device
+	collectors  []metricCollector
+	timeout     time.Duration
+	enableTLS   bool
+	insecureTLS bool
 }
 
-func NewDeviceCollector(cfg Config) (*deviceCollector, error) {
-	devices := make([]Device, len(cfg.Devices))
+// WithBGP enables BGP routing metrics
+func WithBGP() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &bgpCollector{})
+	}
+}
 
+// WithRoutes enables routing table metrics
+func WithRoutes() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &routesCollector{})
+	}
+}
+
+// WithTimeout sets timeout for connecting to router
+func WithTimeout(d time.Duration) Option {
+	return func(c *collector) {
+		c.timeout = d
+	}
+}
+
+// WithTLS enables TLS
+func WithTLS(insecure bool) Option {
+	return func(c *collector) {
+		c.enableTLS = true
+		c.insecureTLS = true
+	}
+}
+
+// Option applies options to collector
+type Option func(*collector)
+
+// NewCollector creates a collector instance
+func NewCollector(cfg *config.Config, opts ...Option) (prometheus.Collector, error) {
 	log.WithFields(log.Fields{
 		"numDevices": len(cfg.Devices),
 	}).Info("setting up collector for devices")
 
-	copy(devices, cfg.Devices)
+	c := &collector{
+		devices: cfg.Devices,
+		timeout: DefaultTimeout,
+		collectors: []metricCollector{
+			&interfaceCollector{},
+			&resourceCollector{},
+		},
+	}
 
-	return &deviceCollector{Devices: devices}, nil
+	for _, o := range opts {
+		o(c)
+	}
+
+	return c, nil
 }
 
 // Describe implements the prometheus.Collector interface.
-func (d deviceCollector) Describe(ch chan<- *prometheus.Desc) {
+func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- scrapeDurationDesc
 	ch <- scrapeSuccessDesc
+
+	for _, co := range c.collectors {
+		co.describe(ch)
+	}
 }
 
 // Collect implements the prometheus.Collector interface.
-func (d deviceCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	wg := sync.WaitGroup{}
-	wg.Add(len(d.Devices))
-	for _, device := range d.Devices {
-		go func(d Device) {
-			execute(d, ch)
+	wg.Add(len(c.devices))
+
+	for _, dev := range c.devices {
+		go func(d config.Device) {
+			c.collectForDevice(d, ch)
 			wg.Done()
-		}(device)
+		}(dev)
 	}
+
 	wg.Wait()
 }
 
-func execute(d Device, ch chan<- prometheus.Metric) {
+func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metric) {
 	begin := time.Now()
-	err := d.Update(ch)
+
+	err := c.connectAndCollect(&d, ch)
+
 	duration := time.Since(begin)
 	var success float64
-
 	if err != nil {
-		log.Errorf("ERROR: %s collector failed after %fs: %s", d.name, duration.Seconds(), err)
+		log.Errorf("ERROR: %s collector failed after %fs: %s", d.Name, duration.Seconds(), err)
 		success = 0
 	} else {
-		log.Debugf("OK: %s collector succeeded after %fs.", d.name, duration.Seconds())
+		log.Debugf("OK: %s collector succeeded after %fs.", d.Name, duration.Seconds())
 		success = 1
 	}
-	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds(), d.name)
-	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success, d.name)
+
+	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds(), d.Name)
+	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success, d.Name)
+}
+
+func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Metric) error {
+	cl, err := c.connect(d)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"device": d.Name,
+			"error":  err,
+		}).Error("error dialing device")
+		return err
+	}
+	defer cl.Close()
+
+	for _, co := range c.collectors {
+		err = co.collect(ch, d, cl)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
+	if !c.enableTLS {
+		return routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
+	}
+
+	tls := &tls.Config{
+		InsecureSkipVerify: c.insecureTLS,
+	}
+	return routeros.DialTLSTimeout(d.Address+apiPortTLS, d.User, d.Password, tls, c.timeout)
 }

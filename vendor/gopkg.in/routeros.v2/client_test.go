@@ -2,7 +2,9 @@ package routeros
 
 import (
 	"flag"
+	"strings"
 	"testing"
+	"time"
 )
 
 var (
@@ -101,6 +103,30 @@ func TestDialTLSInvalidPort(t *testing.T) {
 	}
 	if err.Error() != "dial tcp: lookup tcp/xxx: getaddrinfow: The specified class was not found." {
 		t.Fatal(err)
+	}
+}
+
+func TestDialTimeout(t *testing.T) {
+	c, err := DialTimeout("127.0.0.2:8729", "x", "x", time.Second)
+	if err == nil {
+		c.Close()
+		t.Fatalf("DialTimeout succeeded; want error")
+	}
+
+	if !strings.Contains(err.Error(), "i/o timeout") {
+		t.Fatalf("DialTimeout: Timeout expected in err. Has: %s", err)
+	}
+}
+
+func TestDialTLSTimeout(t *testing.T) {
+	c, err := DialTLSTimeout("127.0.0.2:8729", "x", "x", nil, time.Second)
+	if err == nil {
+		c.Close()
+		t.Fatalf("DialTLSTimeout succeeded; want error")
+	}
+
+	if !strings.Contains(err.Error(), "i/o timeout") {
+		t.Fatalf("DialTLSTimeout: Timeout expected in err. Has: %s", err)
 	}
 }
 

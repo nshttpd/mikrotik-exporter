@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"flag"
+	"io/ioutil"
 	"os"
+	"time"
 
 	"fmt"
 	"net/http"
 
 	"github.com/nshttpd/mikrotik-exporter/collector"
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -20,20 +24,105 @@ var (
 	address     = flag.String("address", "", "address of the device to monitor")
 	user        = flag.String("user", "", "user for authentication with single device")
 	password    = flag.String("password", "", "password for authentication for single device")
-	cfgFile     = flag.String("config", "", "config file for multiple devices")
 	logLevel    = flag.String("log-level", "info", "log level")
 	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
 	port        = flag.String("port", ":9090", "port number to listen on")
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
-	cfg         collector.Config
+	configFile  = flag.String("config-file", "", "config file to load")
+	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
+	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
+	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
+	tls         = flag.Bool("tls", false, "use tls to connect to routers")
+	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
+	cfg         *config.Config
 )
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("mikrotik_exporter"))
 }
 
+func main() {
+	flag.Parse()
+
+	configureLog()
+
+	c, err := loadConfig()
+	if err != nil {
+		log.Errorf("Could not load config: %v", err)
+		os.Exit(3)
+	}
+	cfg = c
+
+	startServer()
+}
+
+func configureLog() {
+	ll, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		panic(err)
+	}
+
+	log.SetLevel(ll)
+}
+
+func loadConfig() (*config.Config, error) {
+	if *configFile != "" {
+		return loadConfigFromFile()
+	}
+
+	return loadConfigFromFlags()
+}
+
+func loadConfigFromFile() (*config.Config, error) {
+	b, err := ioutil.ReadFile(*configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return config.Load(bytes.NewReader(b))
+}
+
+func loadConfigFromFlags() (*config.Config, error) {
+	if *device == "" || *address == "" || *user == "" || *password == "" {
+		return nil, fmt.Errorf("missing required param for single device configuration")
+	}
+
+	return &config.Config{
+		Devices: []config.Device{
+			config.Device{
+				Name:     *device,
+				Address:  *address,
+				User:     *user,
+				Password: *password,
+			},
+		},
+	}, nil
+}
+
+func startServer() {
+	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+			<head><title>Mikrotik Exporter</title></head>
+			<body>
+			<h1>Mikrotik Exporter</h1>
+			<p><a href="` + *metricsPath + `">Metrics</a></p>
+			</body>
+			</html>`))
+	})
+
+	log.Info("Listening on", *port)
+	log.Fatal(http.ListenAndServe(*port, nil))
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	nc, err := collector.NewDeviceCollector(cfg)
+	opts := collectorOptions()
+	nc, err := collector.NewCollector(cfg, opts...)
 	if err != nil {
 		log.Warnln("Couldn't create", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -50,12 +139,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gatherers := prometheus.Gatherers{
-		prometheus.DefaultGatherer,
-		registry,
-	}
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
-	h := promhttp.HandlerFor(gatherers,
+	h := promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
 			ErrorLog:      log.New(),
 			ErrorHandling: promhttp.ContinueOnError,
@@ -63,51 +148,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r)
 }
 
-func main() {
-	flag.Parse()
+func collectorOptions() []collector.Option {
+	opts := []collector.Option{}
 
-	// override default log level of info
-	var ll log.Level
-	var err error
-	ll = log.InfoLevel
-	if *logLevel != "info" {
-		ll, err = log.ParseLevel(*logLevel)
-		if err != nil {
-			panic(err)
-		}
-	}
-	log.SetLevel(ll)
-
-	if *cfgFile == "" {
-		if err := cfg.FromFlags(device, address, user, password); err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Error("could not create configuration")
-			os.Exit(1)
-		}
-	} else {
-		log.Info("config file not supported yet")
-		os.Exit(0)
+	if *withBgp {
+		opts = append(opts, collector.WithBGP())
 	}
 
-	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
-	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
-			<head><title>Mikrotik Exporter</title></head>
-			<body>
-			<h1>Mikrotik Exporter</h1>
-			<p><a href="` + *metricsPath + `">Metrics</a></p>
-			</body>
-			</html>`))
-	})
-
-	log.Info("Listening on", *port)
-	err = http.ListenAndServe(*port, nil)
-	if err != nil {
-		log.Fatal(err)
+	if *withRoutes {
+		opts = append(opts, collector.WithRoutes())
 	}
 
+	if *timeout != collector.DefaultTimeout {
+		opts = append(opts, collector.WithTimeout(*timeout))
+	}
+
+	if *tls {
+		opts = append(opts, collector.WithTLS(*insecure))
+	}
+
+	return opts
 }
