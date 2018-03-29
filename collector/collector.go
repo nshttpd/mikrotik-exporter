@@ -153,7 +153,8 @@ func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Met
 	defer cl.Close()
 
 	for _, co := range c.collectors {
-		err = co.collect(ch, d, cl)
+		ctx := &collectorContext{ch, d, cl}
+		err = co.collect(ctx)
 		if err != nil {
 			return err
 		}
