@@ -66,7 +66,7 @@ func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, e
 }
 
 func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer string) error {
-	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", "?active=true", fmt.Sprintf("?server=%s", dhcpServer), "=count-only=")
+	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", fmt.Sprintf("?server=%s", dhcpServer), "=active=", "=count-only=")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"dhcp_server": dhcpServer,
