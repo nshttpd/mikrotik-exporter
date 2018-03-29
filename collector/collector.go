@@ -57,6 +57,20 @@ func WithRoutes() Option {
 	}
 }
 
+// WithDHCP enables DHCP serrver metrics
+func WithDHCP() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &dhcpCollector{})
+	}
+}
+
+// WithDHCPv6 enables DHCPv6 serrver metrics
+func WithDHCPv6() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &dhcpv6Collector{})
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {

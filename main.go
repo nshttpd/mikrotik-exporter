@@ -31,6 +31,8 @@ var (
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
 	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
+	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
+	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
@@ -157,6 +159,14 @@ func collectorOptions() []collector.Option {
 
 	if *withRoutes {
 		opts = append(opts, collector.WithRoutes())
+	}
+
+	if *withDHCP {
+		opts = append(opts, collector.WithDHCP())
+	}
+
+	if *withDHCPv6 {
+		opts = append(opts, collector.WithDHCPv6())
 	}
 
 	if *timeout != collector.DefaultTimeout {

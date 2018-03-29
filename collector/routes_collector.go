@@ -44,20 +44,36 @@ func (c *routesCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *routesCollector) collect(ctx *collectorContext) error {
-	c.colllectForIPVersion(ctx, "4", "ip")
-	c.colllectForIPVersion(ctx, "6", "ipv6")
+	err := c.colllectForIPVersion(ctx, "4", "ip")
+	if err != nil {
+		return err
+	}
+
+	err = c.colllectForIPVersion(ctx, "6", "ipv6")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (c *routesCollector) colllectForIPVersion(ctx *collectorContext, ipVersion, topic string) {
-	c.colllectCount(ctx, ipVersion, topic)
+func (c *routesCollector) colllectForIPVersion(ctx *collectorContext, ipVersion, topic string) error {
+	err := c.colllectCount(ctx, ipVersion, topic)
+	if err != nil {
+		return err
+	}
 
 	for _, p := range routesProtocols {
-		c.colllectCountProtcol(ctx, ipVersion, topic, p)
+		err := c.colllectCountProtcol(ctx, ipVersion, topic, p)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (c *routesCollector) colllectCount(ctx *collectorContext, ipVersion, topic string) {
+func (c *routesCollector) colllectCount(ctx *collectorContext, ipVersion, topic string) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", "=count-only=")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -65,7 +81,7 @@ func (c *routesCollector) colllectCount(ctx *collectorContext, ipVersion, topic 
 			"device":     ctx.device.Name,
 			"error":      err,
 		}).Error("error fetching routes metrics")
-		return
+		return err
 	}
 
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
@@ -75,13 +91,14 @@ func (c *routesCollector) colllectCount(ctx *collectorContext, ipVersion, topic 
 			"device":     ctx.device.Name,
 			"error":      err,
 		}).Error("error parsing routes metrics")
-		return
+		return err
 	}
 
 	ctx.ch <- prometheus.MustNewConstMetric(routesTotalDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion)
+	return nil
 }
 
-func (c *routesCollector) colllectCountProtcol(ctx *collectorContext, ipVersion, topic, protocol string) {
+func (c *routesCollector) colllectCountProtcol(ctx *collectorContext, ipVersion, topic, protocol string) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", fmt.Sprintf("?%s", protocol), "=count-only=")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -90,7 +107,7 @@ func (c *routesCollector) colllectCountProtcol(ctx *collectorContext, ipVersion,
 			"device":     ctx.device.Name,
 			"error":      err,
 		}).Error("error fetching routes metrics")
-		return
+		return err
 	}
 
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
@@ -101,8 +118,9 @@ func (c *routesCollector) colllectCountProtcol(ctx *collectorContext, ipVersion,
 			"device":     ctx.device.Name,
 			"error":      err,
 		}).Error("error parsing routes metrics")
-		return
+		return err
 	}
 
 	ctx.ch <- prometheus.MustNewConstMetric(routesProtocolDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion, protocol)
+	return nil
 }
