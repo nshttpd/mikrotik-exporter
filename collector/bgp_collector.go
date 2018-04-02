@@ -24,9 +24,9 @@ func (c *bgpCollector) init() {
 	c.props = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
 
 	const prefix = "bgp"
-	c.descriptions = make(map[string]*prometheus.Desc)
-
 	labelNames := []string{"name", "address", "session", "asn"}
+
+	c.descriptions = make(map[string]*prometheus.Desc)
 	c.descriptions["state"] = description(prefix, "up", "BGP session is established (up = 1)", labelNames)
 
 	for _, p := range c.props[3:] {

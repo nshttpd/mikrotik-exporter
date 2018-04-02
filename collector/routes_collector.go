@@ -21,10 +21,10 @@ func newRoutesCollector() routerOSCollector {
 }
 
 func (c *routesCollector) init() {
-	prefix := "routes"
-	l := []string{"name", "address", "ip_version"}
-	c.countDesc = description(prefix, "total_count", "number of routes in RIB", l)
-	c.countProtocolDesc = description(prefix, "protocol_count", "number of routes per protocol in RIB", append(l, "protocol"))
+	const prefix = "routes"
+	labelNames := []string{"name", "address", "ip_version"}
+	c.countDesc = description(prefix, "total_count", "number of routes in RIB", labelNames)
+	c.countProtocolDesc = description(prefix, "protocol_count", "number of routes per protocol in RIB", append(labelNames, "protocol"))
 
 	c.protocols = []string{"bgp", "static", "ospf", "dynamic", "connect"}
 }
