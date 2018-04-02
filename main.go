@@ -33,7 +33,7 @@ var (
 	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
 	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
 	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
-	withPool    = flag.Bool("with-pool", false, "retrieves IP(v6) pool metrics")
+	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
@@ -154,24 +154,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func collectorOptions() []collector.Option {
 	opts := []collector.Option{}
 
-	if *withBgp {
+	if *withBgp || cfg.Features.BGP {
 		opts = append(opts, collector.WithBGP())
 	}
 
-	if *withRoutes {
+	if *withRoutes || cfg.Features.Routes {
 		opts = append(opts, collector.WithRoutes())
 	}
 
-	if *withDHCP {
+	if *withDHCP || cfg.Features.DHCP {
 		opts = append(opts, collector.WithDHCP())
 	}
 
-	if *withDHCPv6 {
+	if *withDHCPv6 || cfg.Features.DHCPv6 {
 		opts = append(opts, collector.WithDHCPv6())
 	}
 
-	if *withPool {
-		opts = append(opts, collector.WithPool())
+	if *withPools || cfg.Features.Pools {
+		opts = append(opts, collector.WithPools())
 	}
 
 	if *timeout != collector.DefaultTimeout {

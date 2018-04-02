@@ -71,8 +71,8 @@ func WithDHCPv6() Option {
 	}
 }
 
-// WithPool enables IP(v6) pool metrics
-func WithPool() Option {
+// WithPools enables IP(v6) pool metrics
+func WithPools() Option {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, &poolCollector{})
 	}

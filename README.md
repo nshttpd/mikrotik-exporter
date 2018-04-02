@@ -42,7 +42,7 @@ created for the exporter to use to access the API.
 where `config-file` is the path to a config file in YAML format.
 
 ###### example config
-```
+```yaml
 devices:
   - name: my_router
     address: 10.10.0.1
@@ -52,6 +52,13 @@ devices:
     address: 10.10.0.2
     user: prometheus2
     password: password_to_second_router
+
+features:
+  bgp: true
+  dhcp: true
+  dhcpv6: true
+  routes: true
+  pools: true
 ```
 
 ###### example output
