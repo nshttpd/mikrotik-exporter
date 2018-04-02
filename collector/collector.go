@@ -71,6 +71,13 @@ func WithDHCPv6() Option {
 	}
 }
 
+// WithPool enables IP(v6) pool metrics
+func WithPool() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, &poolCollector{})
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {
