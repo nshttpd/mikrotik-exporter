@@ -19,7 +19,7 @@ type Config struct {
 	} `yaml:"features,omitempty"`
 }
 
-// Device represents on target device
+// Device represents a target device
 type Device struct {
 	Name     string `yaml:"name"`
 	Address  string `yaml:"address"`
