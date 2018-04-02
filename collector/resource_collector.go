@@ -9,24 +9,29 @@ import (
 	"gopkg.in/routeros.v2/proto"
 )
 
-var (
-	resourceLabelNames   = []string{"name", "address"}
-	resourceProps        = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
-	resourceDescriptions map[string]*prometheus.Desc
-)
+type resourceCollector struct {
+	props        []string
+	descriptions map[string]*prometheus.Desc
+}
 
-func init() {
-	resourceDescriptions = make(map[string]*prometheus.Desc)
-	for _, p := range resourceProps {
-		resourceDescriptions[p] = descriptionForPropertyName("system", p, resourceLabelNames)
+func newResourceCollector() routerOSCollector {
+	c := &resourceCollector{}
+	c.init()
+	return c
+}
+
+func (c *resourceCollector) init() {
+	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
+
+	labelNames := []string{"name", "address"}
+	c.descriptions = make(map[string]*prometheus.Desc)
+	for _, p := range c.props {
+		c.descriptions[p] = descriptionForPropertyName("system", p, labelNames)
 	}
 }
 
-type resourceCollector struct {
-}
-
 func (c *resourceCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, d := range resourceDescriptions {
+	for _, d := range c.descriptions {
 		ch <- d
 	}
 }
@@ -45,7 +50,7 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(resourceProps, ","))
+	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -58,7 +63,7 @@ func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, err
 }
 
 func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	for _, p := range resourceProps {
+	for _, p := range c.props {
 		c.collectMetricForProperty(p, re, ctx)
 	}
 }
@@ -75,6 +80,6 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 		return
 	}
 
-	desc := resourceDescriptions[property]
+	desc := c.descriptions[property]
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address)
 }

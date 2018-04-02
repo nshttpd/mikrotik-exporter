@@ -8,27 +8,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const poolPrefiix = "ip_pool"
-
-var (
-	poolUsedCountDesc *prometheus.Desc
-)
-
-func init() {
-	l := []string{"name", "address", "ip_version", "pool"}
-	poolUsedCountDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, poolPrefiix, "pool_used_count"),
-		"number of used IP/prefixes in a pool",
-		l,
-		nil,
-	)
+type poolCollector struct {
+	usedCountDesc *prometheus.Desc
 }
 
-type poolCollector struct {
+func (c *poolCollector) init() {
+	prefix := "ip_pool"
+	labelNames := []string{"name", "address", "ip_version", "pool"}
+	c.usedCountDesc = description(prefix, "pool_used_count", "number of used IP/prefixes in a pool", labelNames)
+}
+
+func newPoolCollector() routerOSCollector {
+	c := &poolCollector{}
+	c.init()
+	return c
 }
 
 func (c *poolCollector) describe(ch chan<- *prometheus.Desc) {
-	ch <- poolUsedCountDesc
+	ch <- c.usedCountDesc
 }
 
 func (c *poolCollector) collect(ctx *collectorContext) error {
@@ -102,6 +99,6 @@ func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *colle
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(poolUsedCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion, pool)
+	ctx.ch <- prometheus.MustNewConstMetric(c.usedCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, ipVersion, pool)
 	return nil
 }

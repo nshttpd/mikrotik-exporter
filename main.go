@@ -103,7 +103,11 @@ func loadConfigFromFlags() (*config.Config, error) {
 }
 
 func startServer() {
-	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
+	h, err := createMetricsHandler()
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Handle(*metricsPath, h)
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
@@ -123,32 +127,24 @@ func startServer() {
 	log.Fatal(http.ListenAndServe(*port, nil))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func createMetricsHandler() (http.Handler, error) {
 	opts := collectorOptions()
 	nc, err := collector.NewCollector(cfg, opts...)
 	if err != nil {
-		log.Warnln("Couldn't create", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Couldn't create %s", err)))
-		return
+		return nil, err
 	}
 
 	registry := prometheus.NewRegistry()
 	err = registry.Register(nc)
 	if err != nil {
-		log.Errorln("Couldn't register collector:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("Couldn't register collector: %s", err)))
-		return
+		return nil, err
 	}
 
-	// Delegate http serving to Prometheus client library, which will call collector.Collect.
-	h := promhttp.HandlerFor(registry,
+	return promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
 			ErrorLog:      log.New(),
 			ErrorHandling: promhttp.ContinueOnError,
-		})
-	h.ServeHTTP(w, r)
+		}), nil
 }
 
 func collectorOptions() []collector.Option {

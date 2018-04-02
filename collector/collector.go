@@ -37,7 +37,7 @@ var (
 
 type collector struct {
 	devices     []config.Device
-	collectors  []metricCollector
+	collectors  []routerOSCollector
 	timeout     time.Duration
 	enableTLS   bool
 	insecureTLS bool
@@ -53,28 +53,28 @@ func WithBGP() Option {
 // WithRoutes enables routing table metrics
 func WithRoutes() Option {
 	return func(c *collector) {
-		c.collectors = append(c.collectors, &routesCollector{})
+		c.collectors = append(c.collectors, newRoutesCollector())
 	}
 }
 
 // WithDHCP enables DHCP serrver metrics
 func WithDHCP() Option {
 	return func(c *collector) {
-		c.collectors = append(c.collectors, &dhcpCollector{})
+		c.collectors = append(c.collectors, newDHCPCollector())
 	}
 }
 
 // WithDHCPv6 enables DHCPv6 serrver metrics
 func WithDHCPv6() Option {
 	return func(c *collector) {
-		c.collectors = append(c.collectors, &dhcpv6Collector{})
+		c.collectors = append(c.collectors, newDHCPv6Collector())
 	}
 }
 
 // WithPools enables IP(v6) pool metrics
 func WithPools() Option {
 	return func(c *collector) {
-		c.collectors = append(c.collectors, &poolCollector{})
+		c.collectors = append(c.collectors, newPoolCollector())
 	}
 }
 
@@ -105,9 +105,9 @@ func NewCollector(cfg *config.Config, opts ...Option) (prometheus.Collector, err
 	c := &collector{
 		devices: cfg.Devices,
 		timeout: DefaultTimeout,
-		collectors: []metricCollector{
-			&interfaceCollector{},
-			&resourceCollector{},
+		collectors: []routerOSCollector{
+			newInterfaceCollector(),
+			newResourceCollector(),
 		},
 	}
 

@@ -8,27 +8,25 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const dhcpPrefiix = "dhcp"
-
-var (
-	dhcpLeasesActiveCountDesc *prometheus.Desc
-)
-
-func init() {
-	l := []string{"name", "address", "server"}
-	dhcpLeasesActiveCountDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, dhcpPrefiix, "leases_active_count"),
-		"number of active leases per DHCP server",
-		l,
-		nil,
-	)
+type dhcpCollector struct {
+	leasesActiveCountDesc *prometheus.Desc
 }
 
-type dhcpCollector struct {
+func (c *dhcpCollector) init() {
+	const prefix = "dhcp"
+
+	labelNames := []string{"name", "address", "server"}
+	c.leasesActiveCountDesc = description(prefix, "leases_active_count", "number of active leases per DHCP server", labelNames)
+}
+
+func newDHCPCollector() routerOSCollector {
+	c := &dhcpCollector{}
+	c.init()
+	return c
 }
 
 func (c *dhcpCollector) describe(ch chan<- *prometheus.Desc) {
-	ch <- dhcpLeasesActiveCountDesc
+	ch <- c.leasesActiveCountDesc
 }
 
 func (c *dhcpCollector) collect(ctx *collectorContext) error {
@@ -86,6 +84,6 @@ func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer 
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(dhcpLeasesActiveCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
+	ctx.ch <- prometheus.MustNewConstMetric(c.leasesActiveCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
 	return nil
 }

@@ -8,27 +8,25 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const dhcpv6Prefiix = "dhcpv6"
-
-var (
-	dhcpv6bindingCountDesc *prometheus.Desc
-)
-
-func init() {
-	l := []string{"name", "address", "server"}
-	dhcpv6bindingCountDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, dhcpv6Prefiix, "binding_count"),
-		"number of active bindings per DHCPv6 server",
-		l,
-		nil,
-	)
+type dhcpv6Collector struct {
+	bindingCountDesc *prometheus.Desc
 }
 
-type dhcpv6Collector struct {
+func newDHCPv6Collector() routerOSCollector {
+	c := &dhcpv6Collector{}
+	c.init()
+	return c
+}
+
+func (c *dhcpv6Collector) init() {
+	const prefix = "dhcpv6"
+
+	labelNames := []string{"name", "address", "server"}
+	c.bindingCountDesc = description(prefix, "binding_count", "number of active bindings per DHCPv6 server", labelNames)
 }
 
 func (c *dhcpv6Collector) describe(ch chan<- *prometheus.Desc) {
-	ch <- dhcpv6bindingCountDesc
+	ch <- c.bindingCountDesc
 }
 
 func (c *dhcpv6Collector) collect(ctx *collectorContext) error {
@@ -86,6 +84,6 @@ func (c *dhcpv6Collector) colllectForDHCPServer(ctx *collectorContext, dhcpServe
 		return err
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(dhcpv6bindingCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
+	ctx.ch <- prometheus.MustNewConstMetric(c.bindingCountDesc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, dhcpServer)
 	return nil
 }

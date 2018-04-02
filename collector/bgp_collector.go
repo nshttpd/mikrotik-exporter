@@ -9,30 +9,33 @@ import (
 	"gopkg.in/routeros.v2/proto"
 )
 
-var (
-	bgpabelNames    = []string{"name", "address", "session", "asn"}
-	bgpProps        = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
-	bgpDescriptions map[string]*prometheus.Desc
-)
+type bgpCollector struct {
+	props        []string
+	descriptions map[string]*prometheus.Desc
+}
 
-func init() {
-	bgpDescriptions = make(map[string]*prometheus.Desc)
-	bgpDescriptions["state"] = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "bgp", "up"),
-		"BGP session is established (up = 1)",
-		bgpabelNames,
-		nil,
-	)
-	for _, p := range bgpProps[3:] {
-		bgpDescriptions[p] = descriptionForPropertyName("bgp", p, bgpabelNames)
+func newBGPCollector() routerOSCollector {
+	c := &bgpCollector{}
+	c.init()
+	return c
+}
+
+func (c *bgpCollector) init() {
+	c.props = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
+
+	const prefix = "bgp"
+	c.descriptions = make(map[string]*prometheus.Desc)
+
+	labelNames := []string{"name", "address", "session", "asn"}
+	c.descriptions["state"] = description(prefix, "up", "BGP session is established (up = 1)", labelNames)
+
+	for _, p := range c.props[3:] {
+		c.descriptions[p] = descriptionForPropertyName(prefix, p, labelNames)
 	}
 }
 
-type bgpCollector struct {
-}
-
 func (c *bgpCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, d := range bgpDescriptions {
+	for _, d := range c.descriptions {
 		ch <- d
 	}
 }
@@ -51,7 +54,7 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(bgpProps, ","))
+	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -65,7 +68,7 @@ func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 
 func (c *bgpCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
 	var session, asn string
-	for _, p := range bgpProps {
+	for _, p := range c.props {
 		if p == "name" {
 			session = re.Map[p]
 		} else if p == "remote-as" {
@@ -77,7 +80,7 @@ func (c *bgpCollector) collectForStat(re *proto.Sentence, ctx *collectorContext)
 }
 
 func (c *bgpCollector) collectMetricForProperty(property, session, asn string, re *proto.Sentence, ctx *collectorContext) {
-	desc := bgpDescriptions[property]
+	desc := c.descriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {
 		log.WithFields(log.Fields{
