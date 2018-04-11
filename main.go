@@ -31,6 +31,9 @@ var (
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
 	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
+	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
+	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
+	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
@@ -100,7 +103,11 @@ func loadConfigFromFlags() (*config.Config, error) {
 }
 
 func startServer() {
-	http.HandleFunc(*metricsPath, prometheus.InstrumentHandlerFunc("prometheus", handler))
+	h, err := createMetricsHandler()
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Handle(*metricsPath, h)
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
@@ -120,43 +127,47 @@ func startServer() {
 	log.Fatal(http.ListenAndServe(*port, nil))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func createMetricsHandler() (http.Handler, error) {
 	opts := collectorOptions()
 	nc, err := collector.NewCollector(cfg, opts...)
 	if err != nil {
-		log.Warnln("Couldn't create", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Couldn't create %s", err)))
-		return
+		return nil, err
 	}
 
 	registry := prometheus.NewRegistry()
 	err = registry.Register(nc)
 	if err != nil {
-		log.Errorln("Couldn't register collector:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("Couldn't register collector: %s", err)))
-		return
+		return nil, err
 	}
 
-	// Delegate http serving to Prometheus client library, which will call collector.Collect.
-	h := promhttp.HandlerFor(registry,
+	return promhttp.HandlerFor(registry,
 		promhttp.HandlerOpts{
 			ErrorLog:      log.New(),
 			ErrorHandling: promhttp.ContinueOnError,
-		})
-	h.ServeHTTP(w, r)
+		}), nil
 }
 
 func collectorOptions() []collector.Option {
 	opts := []collector.Option{}
 
-	if *withBgp {
+	if *withBgp || cfg.Features.BGP {
 		opts = append(opts, collector.WithBGP())
 	}
 
-	if *withRoutes {
+	if *withRoutes || cfg.Features.Routes {
 		opts = append(opts, collector.WithRoutes())
+	}
+
+	if *withDHCP || cfg.Features.DHCP {
+		opts = append(opts, collector.WithDHCP())
+	}
+
+	if *withDHCPv6 || cfg.Features.DHCPv6 {
+		opts = append(opts, collector.WithDHCPv6())
+	}
+
+	if *withPools || cfg.Features.Pools {
+		opts = append(opts, collector.WithPools())
 	}
 
 	if *timeout != collector.DefaultTimeout {

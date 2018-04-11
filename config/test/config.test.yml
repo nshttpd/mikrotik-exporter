@@ -9,3 +9,10 @@ devices:
     address: 192.168.2.1
     user: test
     password: 123
+
+features:
+  bgp: true
+  dhcp: true
+  dhcpv6: true
+  routes: true
+  pools: true

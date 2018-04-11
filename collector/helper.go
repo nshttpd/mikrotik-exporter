@@ -18,3 +18,12 @@ func descriptionForPropertyName(prefix, property string, labelNames []string) *p
 		nil,
 	)
 }
+
+func description(prefix, name, helpText string, labelNames []string) *prometheus.Desc {
+	return prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, prefix, name),
+		helpText,
+		labelNames,
+		nil,
+	)
+}

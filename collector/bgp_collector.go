@@ -4,59 +4,60 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	routeros "gopkg.in/routeros.v2"
 	"gopkg.in/routeros.v2/proto"
 )
 
-var (
-	bgpabelNames    = []string{"name", "address", "session", "asn"}
-	bgpProps        = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
-	bgpDescriptions map[string]*prometheus.Desc
-)
+type bgpCollector struct {
+	props        []string
+	descriptions map[string]*prometheus.Desc
+}
 
-func init() {
-	bgpDescriptions = make(map[string]*prometheus.Desc)
-	bgpDescriptions["state"] = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "bgp", "up"),
-		"BGP session is established (up = 1)",
-		bgpabelNames,
-		nil,
-	)
-	for _, p := range bgpProps[3:] {
-		bgpDescriptions[p] = descriptionForPropertyName("bgp", p, bgpabelNames)
+func newBGPCollector() routerOSCollector {
+	c := &bgpCollector{}
+	c.init()
+	return c
+}
+
+func (c *bgpCollector) init() {
+	c.props = []string{"name", "remote-as", "state", "prefix-count", "updates-sent", "updates-received", "withdrawn-sent", "withdrawn-received"}
+
+	const prefix = "bgp"
+	labelNames := []string{"name", "address", "session", "asn"}
+
+	c.descriptions = make(map[string]*prometheus.Desc)
+	c.descriptions["state"] = description(prefix, "up", "BGP session is established (up = 1)", labelNames)
+
+	for _, p := range c.props[3:] {
+		c.descriptions[p] = descriptionForPropertyName(prefix, p, labelNames)
 	}
 }
 
-type bgpCollector struct {
-}
-
 func (c *bgpCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, d := range bgpDescriptions {
+	for _, d := range c.descriptions {
 		ch <- d
 	}
 }
 
-func (c *bgpCollector) collect(ch chan<- prometheus.Metric, device *config.Device, client *routeros.Client) error {
-	stats, err := c.fetch(client, device)
+func (c *bgpCollector) collect(ctx *collectorContext) error {
+	stats, err := c.fetch(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, device, ch)
+		c.collectForStat(re, ctx)
 	}
 
 	return nil
 }
 
-func (c *bgpCollector) fetch(client *routeros.Client, device *config.Device) ([]*proto.Sentence, error) {
-	reply, err := client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(bgpProps, ","))
+func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
+	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device": device.Name,
+			"device": ctx.device.Name,
 			"error":  err,
 		}).Error("error fetching bgp metrics")
 		return nil, err
@@ -65,25 +66,25 @@ func (c *bgpCollector) fetch(client *routeros.Client, device *config.Device) ([]
 	return reply.Re, nil
 }
 
-func (c *bgpCollector) collectForStat(re *proto.Sentence, device *config.Device, ch chan<- prometheus.Metric) {
+func (c *bgpCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
 	var session, asn string
-	for _, p := range bgpProps {
+	for _, p := range c.props {
 		if p == "name" {
 			session = re.Map[p]
 		} else if p == "remote-as" {
 			asn = re.Map[p]
 		} else {
-			c.collectMetricForProperty(p, session, asn, device, re, ch)
+			c.collectMetricForProperty(p, session, asn, re, ctx)
 		}
 	}
 }
 
-func (c *bgpCollector) collectMetricForProperty(property, session, asn string, device *config.Device, re *proto.Sentence, ch chan<- prometheus.Metric) {
-	desc := bgpDescriptions[property]
+func (c *bgpCollector) collectMetricForProperty(property, session, asn string, re *proto.Sentence, ctx *collectorContext) {
+	desc := c.descriptions[property]
 	v, err := c.parseValueForProperty(property, re.Map[property])
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device":   device.Name,
+			"device":   ctx.device.Name,
 			"session":  session,
 			"property": property,
 			"value":    re.Map[property],
@@ -92,7 +93,7 @@ func (c *bgpCollector) collectMetricForProperty(property, session, asn string, d
 		return
 	}
 
-	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, device.Name, device.Address, session, asn)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, session, asn)
 }
 
 func (c *bgpCollector) parseValueForProperty(property, value string) (float64, error) {

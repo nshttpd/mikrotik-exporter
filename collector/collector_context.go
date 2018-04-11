@@ -6,7 +6,8 @@ import (
 	routeros "gopkg.in/routeros.v2"
 )
 
-type metricCollector interface {
-	describe(ch chan<- *prometheus.Desc)
-	collect(ch chan<- prometheus.Metric, device *config.Device, client *routeros.Client) error
+type collectorContext struct {
+	ch     chan<- prometheus.Metric
+	device *config.Device
+	client *routeros.Client
 }

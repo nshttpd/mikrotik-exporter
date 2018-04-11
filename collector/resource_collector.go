@@ -4,53 +4,56 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/routeros.v2"
 	"gopkg.in/routeros.v2/proto"
 )
 
-var (
-	resourceLabelNames   = []string{"name", "address"}
-	resourceProps        = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
-	resourceDescriptions map[string]*prometheus.Desc
-)
+type resourceCollector struct {
+	props        []string
+	descriptions map[string]*prometheus.Desc
+}
 
-func init() {
-	resourceDescriptions = make(map[string]*prometheus.Desc)
-	for _, p := range resourceProps {
-		resourceDescriptions[p] = descriptionForPropertyName("system", p, resourceLabelNames)
+func newResourceCollector() routerOSCollector {
+	c := &resourceCollector{}
+	c.init()
+	return c
+}
+
+func (c *resourceCollector) init() {
+	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
+
+	labelNames := []string{"name", "address"}
+	c.descriptions = make(map[string]*prometheus.Desc)
+	for _, p := range c.props {
+		c.descriptions[p] = descriptionForPropertyName("system", p, labelNames)
 	}
 }
 
-type resourceCollector struct {
-}
-
 func (c *resourceCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, d := range resourceDescriptions {
+	for _, d := range c.descriptions {
 		ch <- d
 	}
 }
 
-func (c *resourceCollector) collect(ch chan<- prometheus.Metric, device *config.Device, client *routeros.Client) error {
-	stats, err := c.fetch(client, device)
+func (c *resourceCollector) collect(ctx *collectorContext) error {
+	stats, err := c.fetch(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, device, ch)
+		c.collectForStat(re, ctx)
 	}
 
 	return nil
 }
 
-func (c *resourceCollector) fetch(client *routeros.Client, device *config.Device) ([]*proto.Sentence, error) {
-	reply, err := client.Run("/system/resource/print", "=.proplist="+strings.Join(resourceProps, ","))
+func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
+	reply, err := ctx.client.Run("/system/resource/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device": device.Name,
+			"device": ctx.device.Name,
 			"error":  err,
 		}).Error("error fetching system resource metrics")
 		return nil, err
@@ -59,17 +62,17 @@ func (c *resourceCollector) fetch(client *routeros.Client, device *config.Device
 	return reply.Re, nil
 }
 
-func (c *resourceCollector) collectForStat(re *proto.Sentence, device *config.Device, ch chan<- prometheus.Metric) {
-	for _, p := range resourceProps {
-		c.collectMetricForProperty(p, device, re, ch)
+func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+	for _, p := range c.props {
+		c.collectMetricForProperty(p, re, ctx)
 	}
 }
 
-func (c *resourceCollector) collectMetricForProperty(property string, device *config.Device, re *proto.Sentence, ch chan<- prometheus.Metric) {
+func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"device":   device.Name,
+			"device":   ctx.device.Name,
 			"property": property,
 			"value":    re.Map[property],
 			"error":    err,
@@ -77,6 +80,6 @@ func (c *resourceCollector) collectMetricForProperty(property string, device *co
 		return
 	}
 
-	desc := resourceDescriptions[property]
-	ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, device.Name, device.Address)
+	desc := c.descriptions[property]
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address)
 }
