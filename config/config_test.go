@@ -24,6 +24,7 @@ func TestShouldParse(t *testing.T) {
 	assertFeature("DHCPv6", c.Features.DHCPv6, t)
 	assertFeature("Pools", c.Features.Pools, t)
 	assertFeature("Routes", c.Features.Routes, t)
+	assertFeature("Optics", c.Features.Optics, t)
 }
 
 func loadTestFile(t *testing.T) []byte {
