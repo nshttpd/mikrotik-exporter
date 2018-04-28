@@ -26,7 +26,7 @@ var (
 	password    = flag.String("password", "", "password for authentication for single device")
 	logLevel    = flag.String("log-level", "info", "log level")
 	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
-	port        = flag.String("port", ":9090", "port number to listen on")
+	port        = flag.String("port", ":9436", "port number to listen on")
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
