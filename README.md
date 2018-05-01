@@ -59,6 +59,7 @@ features:
   dhcpv6: true
   routes: true
   pools: true
+  optics: true
 ```
 
 ###### example output
