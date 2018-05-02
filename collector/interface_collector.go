@@ -63,8 +63,11 @@ func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 }
 
 func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+	name := re.Map["name"]
+	comment := re.Map["comment"]
+
 	for _, p := range c.props[2:] {
-		c.collectMetricForProperty(p, re.Map["name"], re.Map["comment"], re, ctx)
+		c.collectMetricForProperty(p, name, comment, re, ctx)
 	}
 }
 
