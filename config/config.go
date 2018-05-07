@@ -16,6 +16,7 @@ type Config struct {
 		DHCPv6 bool `yaml:"dhcpv6,omitempty"`
 		Routes bool `yaml:"routes,omitempty"`
 		Pools  bool `yaml:"pools,omitempty"`
+		Optics bool `yaml:"optics,omitempty"`
 	} `yaml:"features,omitempty"`
 }
 

@@ -78,6 +78,13 @@ func WithPools() Option {
 	}
 }
 
+// WithOptics enables optical diagnstocs
+func WithOptics() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newOpticsCollector())
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {

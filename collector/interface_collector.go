@@ -21,9 +21,9 @@ func newInterfaceCollector() routerOSCollector {
 }
 
 func (c *interfaceCollector) init() {
-	c.props = []string{"name", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
+	c.props = []string{"name", "comment", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
 
-	labelNames := []string{"name", "address", "interface"}
+	labelNames := []string{"name", "address", "interface", "comment"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[1:] {
 		c.descriptions[p] = descriptionForPropertyName("interface", p, labelNames)
@@ -63,17 +63,15 @@ func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 }
 
 func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	var iface string
-	for _, p := range c.props {
-		if p == "name" {
-			iface = re.Map[p]
-		} else {
-			c.collectMetricForProperty(p, iface, re, ctx)
-		}
+	name := re.Map["name"]
+	comment := re.Map["comment"]
+
+	for _, p := range c.props[2:] {
+		c.collectMetricForProperty(p, name, comment, re, ctx)
 	}
 }
 
-func (c *interfaceCollector) collectMetricForProperty(property, iface string, re *proto.Sentence, ctx *collectorContext) {
+func (c *interfaceCollector) collectMetricForProperty(property, iface, comment string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
@@ -87,5 +85,5 @@ func (c *interfaceCollector) collectMetricForProperty(property, iface string, re
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface, comment)
 }
