@@ -67,15 +67,11 @@ func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 }
 
 func (c *bgpCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	var session, asn string
-	for _, p := range c.props {
-		if p == "name" {
-			session = re.Map[p]
-		} else if p == "remote-as" {
-			asn = re.Map[p]
-		} else {
-			c.collectMetricForProperty(p, session, asn, re, ctx)
-		}
+	asn := re.Map["remote-as"]
+	session := re.Map["name"]
+
+	for _, p := range c.props[2:] {
+		c.collectMetricForProperty(p, session, asn, re, ctx)
 	}
 }
 

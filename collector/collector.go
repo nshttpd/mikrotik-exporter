@@ -46,7 +46,7 @@ type collector struct {
 // WithBGP enables BGP routing metrics
 func WithBGP() Option {
 	return func(c *collector) {
-		c.collectors = append(c.collectors, &bgpCollector{})
+		c.collectors = append(c.collectors, newBGPCollector())
 	}
 }
 
