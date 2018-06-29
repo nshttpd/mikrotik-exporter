@@ -21,7 +21,7 @@ can be added as long as published via the API.
 
 Create a user on the device that has API and read-only access.
 
-`/user group add name=prometheus policy=api,read`
+`/user group add name=prometheus policy=api,read,winbox`
 
 Create the user to access the API via.
 
