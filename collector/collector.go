@@ -85,6 +85,20 @@ func WithOptics() Option {
 	}
 }
 
+// WithWlanSTA enables wlan STA metrics
+func WithWlanSTA() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newWlanSTACollector())
+	}
+}
+
+// WithWlanIF enables wireless interface metrics
+func WithWlanIF() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newWlanIFCollector())
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {

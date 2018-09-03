@@ -11,12 +11,14 @@ import (
 type Config struct {
 	Devices  []Device `yaml:"devices"`
 	Features struct {
-		BGP    bool `yaml:"bgp,omitempty"`
-		DHCP   bool `yaml:"dhcp,omitempty"`
-		DHCPv6 bool `yaml:"dhcpv6,omitempty"`
-		Routes bool `yaml:"routes,omitempty"`
-		Pools  bool `yaml:"pools,omitempty"`
-		Optics bool `yaml:"optics,omitempty"`
+		BGP     bool `yaml:"bgp,omitempty"`
+		DHCP    bool `yaml:"dhcp,omitempty"`
+		DHCPv6  bool `yaml:"dhcpv6,omitempty"`
+		Routes  bool `yaml:"routes,omitempty"`
+		Pools   bool `yaml:"pools,omitempty"`
+		Optics  bool `yaml:"optics,omitempty"`
+		WlanSTA bool `yaml:"wlansta,omitempty"`
+		WlanIF  bool `yaml:"wlanif,omitempty"`
 	} `yaml:"features,omitempty"`
 }
 

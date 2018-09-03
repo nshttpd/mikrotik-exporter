@@ -35,6 +35,8 @@ var (
 	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
 	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
 	withOptics  = flag.Bool("with-optics", false, "retrieves optical diagnostic metrics")
+	withWlanSTA = flag.Bool("with-wlansta", false, "retrieves connected wlan station metrics")
+	withWlanIF  = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout*time.Second, "timeout when connecting to routers")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
@@ -173,6 +175,14 @@ func collectorOptions() []collector.Option {
 
 	if *withOptics || cfg.Features.Optics {
 		opts = append(opts, collector.WithOptics())
+	}
+
+	if *withWlanSTA || cfg.Features.WlanSTA {
+		opts = append(opts, collector.WithWlanSTA())
+	}
+
+	if *withWlanIF || cfg.Features.WlanIF {
+		opts = append(opts, collector.WithWlanIF())
 	}
 
 	if *timeout != collector.DefaultTimeout {

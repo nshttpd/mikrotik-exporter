@@ -17,3 +17,5 @@ features:
   routes: true
   pools: true
   optics: true
+  wlansta: true
+  wlanif: true
