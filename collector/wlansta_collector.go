@@ -86,6 +86,7 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 			"value":    re.Map[property],
 			"error":    err,
 		}).Error("error parsing wlan station metric value")
+		return
 	}
 
 	desc := c.descriptions[property]
@@ -101,6 +102,7 @@ func (c *wlanSTACollector) collectMetricForTXRXCounters(property, iface, mac str
 			"value":    re.Map[property],
 			"error":    err,
 		}).Error("error parsing wlan station metric value")
+		return
 	}
 	desc_tx := c.descriptions["tx_"+property]
 	desc_rx := c.descriptions["rx_"+property]
