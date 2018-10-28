@@ -73,17 +73,18 @@ func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorCo
 
 func (c *interfaceCollector) collectMetricForProperty(property, iface, comment string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
-	v, err := strconv.ParseFloat(re.Map[property], 64)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"device":    ctx.device.Name,
-			"interface": iface,
-			"property":  property,
-			"value":     re.Map[property],
-			"error":     err,
-		}).Error("error parsing interface metric value")
-		return
+	if value := re.Map[property]; value != "" {
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"device":    ctx.device.Name,
+				"interface": iface,
+				"property":  property,
+				"value":     value,
+				"error":     err,
+			}).Error("error parsing interface metric value")
+			return
+		}
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface, comment)
 	}
-
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface, comment)
 }
