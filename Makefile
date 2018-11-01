@@ -7,12 +7,12 @@ LDFLAGS=-X github.com/nshttpd/mikrotik-exporter/cmd.version=$(VERSION)
 LDFLAGS+=-X github.com/nshttpd/mikrotik-exporter/cmd.shortSha=$(SHORTSHA)
 
 build:
-        go build -ldflags "$(LDFLAGS)" .
+	go build -ldflags "$(LDFLAGS)" .
 
 utils:
-        go get github.com/mitchellh/gox
-        go get github.com/tcnksm/ghr
+	go get github.com/mitchellh/gox
+	go get github.com/tcnksm/ghr
 
 deploy: utils
-        gox -parallel=4 -ldflags "$(LDFLAGS)" -output "dist/mikrotik-exporter_{{.OS}}_{{.Arch}}"
-        ghr -t $(GITHUB_TOKEN) -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) --replace $(VERSION) dist/
+	gox -parallel=4 -ldflags "$(LDFLAGS)" -output "dist/mikrotik-exporter_{{.OS}}_{{.Arch}}"
+	ghr -t $(GITHUB_TOKEN) -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) --replace $(VERSION) dist/
