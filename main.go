@@ -68,6 +68,12 @@ func configureLog() {
 	}
 
 	log.SetLevel(ll)
+
+	if *logFormat == "text" {
+		log.SetFormatter(&log.TextFormatter{})
+	} else {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
 }
 
 func loadConfig() (*config.Config, error) {
