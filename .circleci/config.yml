@@ -10,4 +10,6 @@ jobs:
         - /^nshttpd.*/
     steps:
       - checkout
-      - run: make deploy
+      - setup_remote_docker:
+          version: 18.05.0-ce
+      - run: make dockerhub
