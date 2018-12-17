@@ -16,3 +16,8 @@ utils:
 deploy: utils
 	gox -parallel=4 -ldflags "$(LDFLAGS)" -output "dist/mikrotik-exporter_{{.OS}}_{{.Arch}}"
 	ghr -t $(GITHUB_TOKEN) -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) -replace $(VERSION) dist/
+
+dockerhub: deploy
+	docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+	docker build -t docker build -t $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME):${VERSION} .
+	docker push $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME):${VERSION}
