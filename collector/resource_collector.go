@@ -1,13 +1,23 @@
 package collector
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
 )
+
+var uptimeRegex *regexp.Regexp
+var uptimeParts [5]time.Duration
+
+func init() {
+	uptimeRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)`)
+	uptimeParts = [5]time.Duration{time.Hour * 168, time.Hour * 24, time.Hour, time.Minute, time.Second}
+}
 
 type resourceCollector struct {
 	props        []string
@@ -21,7 +31,7 @@ func newResourceCollector() routerOSCollector {
 }
 
 func (c *resourceCollector) init() {
-	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space"}
+	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space", "uptime"}
 
 	labelNames := []string{"name", "address"}
 	c.descriptions = make(map[string]*prometheus.Desc)
@@ -69,7 +79,15 @@ func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorCon
 }
 
 func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
-	v, err := strconv.ParseFloat(re.Map[property], 64)
+	var v float64
+	var err error
+
+	if property == "uptime" {
+		v, err = parseUptime(re.Map[property])
+	} else {
+		v, err = strconv.ParseFloat(re.Map[property], 64)
+	}
+
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device":   ctx.device.Name,
@@ -82,4 +100,25 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 
 	desc := c.descriptions[property]
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address)
+}
+
+func parseUptime(uptime string) (float64, error) {
+	var u time.Duration
+
+	for i, match := range uptimeRegex.FindAllStringSubmatch(uptime, -1)[0] {
+		if match != "" && i != 0 {
+			v, err := strconv.Atoi(match)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"uptime": uptime,
+					"value":  match,
+					"error":  err,
+				}).Error("error parsing uptime field value")
+				return float64(0), err
+			}
+			u += time.Duration(v) * uptimeParts[i-1]
+		}
+	}
+
+	return u.Seconds(), nil
 }
