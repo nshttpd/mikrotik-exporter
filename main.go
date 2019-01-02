@@ -131,7 +131,7 @@ func startServer() {
 			</html>`))
 	})
 
-	log.Info("Listening on", *port)
+	log.Info("Listening on ", *port)
 	log.Fatal(http.ListenAndServe(*port, nil))
 }
 
