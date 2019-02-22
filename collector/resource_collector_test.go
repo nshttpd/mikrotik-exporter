@@ -13,6 +13,7 @@ func TestParseUptime(t *testing.T) {
 		{"3d3h42m53s", 272573},
 		{"15w3d3h42m53s", 9344573},
 		{"42m53s", 2573},
+		{"7w6d9h34m", 4786440},
 	}
 
 	for _, uptime := range uptimes {
