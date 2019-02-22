@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ var uptimeRegex *regexp.Regexp
 var uptimeParts [5]time.Duration
 
 func init() {
-	uptimeRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)`)
+	uptimeRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?`)
 	uptimeParts = [5]time.Duration{time.Hour * 168, time.Hour * 24, time.Hour, time.Minute, time.Second}
 }
 
@@ -105,20 +106,26 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 func parseUptime(uptime string) (float64, error) {
 	var u time.Duration
 
-	for i, match := range uptimeRegex.FindAllStringSubmatch(uptime, -1)[0] {
-		if match != "" && i != 0 {
-			v, err := strconv.Atoi(match)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"uptime": uptime,
-					"value":  match,
-					"error":  err,
-				}).Error("error parsing uptime field value")
-				return float64(0), err
+	reMatch := uptimeRegex.FindAllStringSubmatch(uptime, -1)
+
+	// should get one and only one match back on the regex
+	if len(reMatch) != 1 {
+		return 0, fmt.Errorf("invalid uptime value sent to regex")
+	} else {
+		for i, match := range reMatch[0] {
+			if match != "" && i != 0 {
+				v, err := strconv.Atoi(match)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"uptime": uptime,
+						"value":  match,
+						"error":  err,
+					}).Error("error parsing uptime field value")
+					return float64(0), err
+				}
+				u += time.Duration(v) * uptimeParts[i-1]
 			}
-			u += time.Duration(v) * uptimeParts[i-1]
 		}
 	}
-
 	return u.Seconds(), nil
 }
