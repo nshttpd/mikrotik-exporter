@@ -36,7 +36,7 @@ var (
 	withOptics  = flag.Bool("with-optics", false, "retrieves optical diagnostic metrics")
 	withWlanSTA = flag.Bool("with-wlansta", false, "retrieves connected wlan station metrics")
 	withWlanIF  = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
-	timeout     = flag.Duration("timeout", collector.DefaultTimeout, "timeout when connecting to routers")
+	timeout     = flag.Duration("timeout", collector.DefaultTimeout, "timeout when connecting to devices")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
 	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
 	cfg         *config.Config
@@ -118,11 +118,11 @@ func startServer() {
 	http.Handle(*metricsPath, h)
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, _ = w.Write([]byte(`<html>
 			<head><title>Mikrotik Exporter</title></head>
 			<body>
 			<h1>Mikrotik Exporter</h1>
