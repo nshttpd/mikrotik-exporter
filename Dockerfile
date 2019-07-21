@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM debian:9.9-slim
 
 EXPOSE 9436
 
