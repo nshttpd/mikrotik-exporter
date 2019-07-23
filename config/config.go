@@ -26,6 +26,8 @@ type Config struct {
 type Device struct {
 	Name     string `yaml:"name"`
 	Address  string `yaml:"address"`
+	Port     string `yaml:"port"`
+	PortTLS  string `yaml:"porttls"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 }
