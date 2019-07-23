@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Visteras/mikrotik-exporter/collector"
-	"github.com/Visteras/mikrotik-exporter/config"
+	"github.com/nshttpd/mikrotik-exporter/collector"
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"

@@ -1,7 +1,7 @@
 package collector
 
 import (
-	"github.com/Visteras/mikrotik-exporter/config"
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/routeros.v2"
 )

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Visteras/mikrotik-exporter/config"
+	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2"
