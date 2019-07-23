@@ -11,16 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nshttpd/mikrotik-exporter/config"
+	"github.com/Visteras/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	routeros "gopkg.in/routeros.v2"
+	"gopkg.in/routeros.v2"
 )
 
 const (
-	namespace  = "mikrotik"
-	apiPort    = ":8728"
-	apiPortTLS = ":8729"
+	namespace = "mikrotik"
 
 	// DefaultTimeout defines the default timeout when connecting to a router
 	DefaultTimeout = 5 * time.Second

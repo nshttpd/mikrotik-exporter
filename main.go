@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nshttpd/mikrotik-exporter/collector"
-	"github.com/nshttpd/mikrotik-exporter/config"
+	"github.com/Visteras/mikrotik-exporter/collector"
+	"github.com/Visteras/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -23,6 +23,7 @@ var (
 	address     = flag.String("address", "", "address of the device to monitor")
 	user        = flag.String("user", "", "user for authentication with single device")
 	password    = flag.String("password", "", "password for authentication for single device")
+	portApi     = flag.String("port-api", "", "port for authentication for single device")
 	logLevel    = flag.String("log-level", "info", "log level")
 	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
 	port        = flag.String("port", ":9436", "port number to listen on")
@@ -97,12 +98,21 @@ func loadConfigFromFlags() (*config.Config, error) {
 	if *device == "" || *address == "" || *user == "" || *password == "" {
 		return nil, fmt.Errorf("missing required param for single device configuration")
 	}
+	if *portApi == "" {
+		if *tls {
+			*portApi = "8729"
+		} else {
+			*portApi = "8728"
+		}
+	}
 
 	return &config.Config{
 		Devices: []config.Device{
 			config.Device{
 				Name:     *device,
 				Address:  *address,
+				Port:     *portApi,
+				PortTLS:  *portApi,
 				User:     *user,
 				Password: *password,
 			},
