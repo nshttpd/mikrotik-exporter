@@ -105,6 +105,13 @@ func WithWlanIF() Option {
 	}
 }
 
+// WithMonitor enables ethernet monitor collector metrics
+func Monitor() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newMonitorCollector())
+	}
+}
+
 // WithTimeout sets timeout for connecting to router
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {

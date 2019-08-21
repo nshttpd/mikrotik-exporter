@@ -19,6 +19,7 @@ type Config struct {
 		Optics  bool `yaml:"optics,omitempty"`
 		WlanSTA bool `yaml:"wlansta,omitempty"`
 		WlanIF  bool `yaml:"wlanif,omitempty"`
+		Monitor bool `yaml:"monitor,omitempty"`
 	} `yaml:"features,omitempty"`
 }
 
