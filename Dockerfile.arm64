@@ -1,0 +1,10 @@
+FROM arm64v8/busybox:1.31.0
+
+EXPOSE 9090
+
+COPY scripts/start.sh /app/
+COPY dist/mikrotik-exporter_linux_arm64 /app/mikrotik-exporter
+
+RUN chmod 755 /app/*
+
+ENTRYPOINT ["/app/start.sh"]
