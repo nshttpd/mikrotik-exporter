@@ -3,8 +3,8 @@
 VERSION=`cat VERSION`
 SHORTSHA=`git rev-parse --short HEAD`
 
-LDFLAGS=-X github.com/nshttpd/mikrotik-exporter/cmd.version=$(VERSION)
-LDFLAGS+=-X github.com/nshttpd/mikrotik-exporter/cmd.shortSha=$(SHORTSHA)
+LDFLAGS=-X main.appVersion=$(VERSION)
+LDFLAGS+=-X main.shortSha=$(SHORTSHA)
 
 build:
 	go build -ldflags "$(LDFLAGS)" .
