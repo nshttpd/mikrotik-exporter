@@ -70,6 +70,13 @@ func WithDHCP() Option {
 	}
 }
 
+// WithDHCPL enables DHCP server leases
+func WithDHCPL() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newDHCPLCollector())
+	}
+}
+
 // WithDHCPv6 enables DHCPv6 serrver metrics
 func WithDHCPv6() Option {
 	return func(c *collector) {
