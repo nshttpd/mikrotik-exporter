@@ -57,6 +57,7 @@ features:
   bgp: true
   dhcp: true
   dhcpv6: true
+  dhcpl: true
   routes: true
   pools: true
   optics: true
