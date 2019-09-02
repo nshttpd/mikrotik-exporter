@@ -32,9 +32,9 @@ func newResourceCollector() routerOSCollector {
 }
 
 func (c *resourceCollector) init() {
-	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space", "uptime"}
+	c.props = []string{"free-memory", "total-memory", "cpu-load", "free-hdd-space", "total-hdd-space", "uptime", "board-name", "version"}
 
-	labelNames := []string{"name", "address"}
+	labelNames := []string{"name", "address", "boardname", "version"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("system", p, labelNames)
@@ -54,7 +54,7 @@ func (c *resourceCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+			c.collectForStat(re, ctx)
 	}
 
 	return nil
@@ -74,7 +74,7 @@ func (c *resourceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, err
 }
 
 func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	for _, p := range c.props {
+	for _, p := range c.props[:6] {
 		c.collectMetricForProperty(p, re, ctx)
 	}
 }
@@ -82,6 +82,11 @@ func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorCon
 func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	var v float64
 	var err error
+//	const boardname = "BOARD"
+//	const version = "3.33.3"
+
+	boardname := re.Map["board-name"]
+	version := re.Map["version"]
 
 	if property == "uptime" {
 		v, err = parseUptime(re.Map[property])
@@ -100,7 +105,7 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 	}
 
 	desc := c.descriptions[property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, boardname, version)
 }
 
 func parseUptime(uptime string) (float64, error) {
