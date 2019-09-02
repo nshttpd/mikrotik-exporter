@@ -3,8 +3,8 @@
 VERSION=`cat VERSION`
 SHORTSHA=`git rev-parse --short HEAD`
 
-LDFLAGS=-X github.com/nshttpd/mikrotik-exporter/cmd.version=$(VERSION)
-LDFLAGS+=-X github.com/nshttpd/mikrotik-exporter/cmd.shortSha=$(SHORTSHA)
+LDFLAGS=-X main.appVersion=$(VERSION)
+LDFLAGS+=-X main.shortSha=$(SHORTSHA)
 
 build:
 	go build -ldflags "$(LDFLAGS)" .
@@ -21,3 +21,5 @@ dockerhub: deploy
 	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
 	docker build -t $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME):$(VERSION) .
 	docker push $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME):$(VERSION)
+	docker build -f Dockerfile.arm64 -t $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME)-linux-arm64:$(VERSION) .
+	docker push $(CIRCLE_PROJECT_USERNAME)/$(CIRCLE_PROJECT_REPONAME)-linux-arm64:$(VERSION)

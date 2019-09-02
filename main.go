@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/prometheus/common/version"
+
 	"fmt"
 	"net/http"
 
@@ -13,21 +15,25 @@ import (
 	"github.com/nshttpd/mikrotik-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/version"
 	log "github.com/sirupsen/logrus"
 )
 
-// single device can be defined via CLI flags, mutliple via config file.
+// single device can be defined via CLI flags, multiple via config file.
 var (
-	device      = flag.String("device", "", "single device to monitor")
 	address     = flag.String("address", "", "address of the device to monitor")
-	user        = flag.String("user", "", "user for authentication with single device")
-	password    = flag.String("password", "", "password for authentication for single device")
-	logLevel    = flag.String("log-level", "info", "log level")
-	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
-	port        = flag.String("port", ":9436", "port number to listen on")
-	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	configFile  = flag.String("config-file", "", "config file to load")
+	device      = flag.String("device", "", "single device to monitor")
+	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
+	logFormat   = flag.String("log-format", "json", "logformat text or json (default json)")
+	logLevel    = flag.String("log-level", "info", "log level")
+	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
+	password    = flag.String("password", "", "password for authentication for single device")
+	port        = flag.String("port", ":9436", "port number to listen on")
+	timeout     = flag.Duration("timeout", collector.DefaultTimeout, "timeout when connecting to devices")
+	tls         = flag.Bool("tls", false, "use tls to connect to routers")
+	user        = flag.String("user", "", "user for authentication with single device")
+	ver         = flag.Bool("version", false, "find the version of binary")
+
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
 	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
 	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
@@ -37,10 +43,11 @@ var (
 	withWlanSTA = flag.Bool("with-wlansta", false, "retrieves connected wlan station metrics")
 	withWlanIF  = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
 	withMonitor = flag.Bool("with-monitor", false, "retrieves ethernet interface monitor info")
-	timeout     = flag.Duration("timeout", collector.DefaultTimeout, "timeout when connecting to devices")
-	tls         = flag.Bool("tls", false, "use tls to connect to routers")
-	insecure    = flag.Bool("insecure", false, "skips verification of server certificate when using TLS (not recommended)")
-	cfg         *config.Config
+
+	cfg *config.Config
+
+	appVersion = "DEVELOPMENT"
+	shortSha   = "0xDEADBEEF"
 )
 
 func init() {
@@ -49,6 +56,11 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	if *ver {
+		fmt.Printf("\nVersion:   %s\nShort SHA: %s\n\n", appVersion, shortSha)
+		os.Exit(0)
+	}
 
 	configureLog()
 
