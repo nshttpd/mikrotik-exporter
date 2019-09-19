@@ -134,6 +134,13 @@ func WithTLS(insecure bool) Option {
 	}
 }
 
+// WithIpsec enables ipsec metrics
+func WithIpsec() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newIpsecCollector())
+	}
+}
+
 // Option applies options to collector
 type Option func(*collector)
 
