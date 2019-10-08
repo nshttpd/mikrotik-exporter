@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ ! -x /app/mikrotik-exporter ]; then
-  chmod 755 /app/mikrotik-expoter
+  chmod 755 /app/mikrotik-exporter
 fi
 
 if [ -z "$CONFIG_FILE" ]
