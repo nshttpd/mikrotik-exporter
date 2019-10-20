@@ -84,7 +84,7 @@ func WithDHCPv6() Option {
 	}
 }
 
-// WithPOE enables PoE routing metrics
+// WithPOE enables PoE metrics
 func WithPOE() Option {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, newPOECollector())
