@@ -245,7 +245,7 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 
 	log.WithField("device", d.Name).Debug("trying to Dial")
 	if !c.enableTLS {
-		conn, err = net.Dial("tcp", d.Address+apiPort)
+		conn, err = net.DialTimeout("tcp", d.Address+apiPort, c.timeout)
 		if err != nil {
 			return nil, err
 		}
@@ -254,7 +254,10 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 		tlsCfg := &tls.Config{
 			InsecureSkipVerify: c.insecureTLS,
 		}
-		conn, err = tls.Dial("tcp", d.Address+apiPortTLS, tlsCfg)
+		conn, err = tls.DialWithDialer(&net.Dialer{
+			Timeout: c.timeout,
+		},
+			"tcp", d.Address+apiPortTLS, tlsCfg)
 		if err != nil {
 			return nil, err
 		}
