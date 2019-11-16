@@ -11,8 +11,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nshttpd/mikrotik-exporter/collector"
-	"github.com/nshttpd/mikrotik-exporter/config"
+	"mikrotik-exporter/collector"
+	"mikrotik-exporter/config"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
