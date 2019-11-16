@@ -1,4 +1,4 @@
-# go run -ldflags "-X github.com/nshttpd/mikrotik-exporter/cmd.version=6.6.7-BETA -X github.com/nshttpd/mikrotik-exporter/cmd.shortSha=`git rev-parse HEAD`" main.go version
+# go run -ldflags "-X mikrotik-exporter/cmd.version=6.6.7-BETA -X mikrotik-exporter/cmd.shortSha=`git rev-parse HEAD`" main.go version
 
 VERSION=`cat VERSION`
 SHORTSHA=`git rev-parse --short HEAD`
