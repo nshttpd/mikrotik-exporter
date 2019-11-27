@@ -88,7 +88,9 @@ func (c *poeCollector) collectMetricsForInterface(name string, se *proto.Sentenc
 		if !ok {
 			continue
 		}
-
+		if v == "" {
+			continue
+		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
 			log.WithFields(log.Fields{

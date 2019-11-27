@@ -78,6 +78,9 @@ func (c *wlanSTACollector) collectForStat(re *proto.Sentence, ctx *collectorCont
 }
 
 func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string, re *proto.Sentence, ctx *collectorContext) {
+	if re.Map[property] == "" {
+		return
+	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
 		log.WithFields(log.Fields{
