@@ -28,7 +28,8 @@ type Config struct {
 // Device represents a target device
 type Device struct {
 	Name     string `yaml:"name"`
-	Address  string `yaml:"address"`
+	Address  string `yaml:"address,omitempty"`
+	Srv      string `yaml:"srv,omitempty"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 }

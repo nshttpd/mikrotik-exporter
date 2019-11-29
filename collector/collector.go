@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+  "os"
 	"net"
 	"sync"
 	"time"
+  "strings"
 
 	"mikrotik-exporter/config"
 
+  "github.com/miekg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	routeros "gopkg.in/routeros.v2"
@@ -187,9 +190,46 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements the prometheus.Collector interface.
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	wg := sync.WaitGroup{}
-	wg.Add(len(c.devices))
 
-	for _, dev := range c.devices {
+  var realDevices []config.Device
+
+  for _, dev := range c.devices {
+    if dev.Srv != "" {
+      log.WithFields(log.Fields{
+        "SRV": dev.Srv,
+      }).Info("SRV configuration detected")
+
+      dnsMsg := new(dns.Msg)
+      dnsCli := new(dns.Client)
+
+      dnsMsg.RecursionDesired = true
+      dnsMsg.SetQuestion(dns.Fqdn(dev.Srv), dns.TypeSRV)
+      r, _, err := dnsCli.Exchange(dnsMsg, "1.1.1.1:53")
+
+      if err != nil {
+        os.Exit(1)
+      }
+
+      for _, k := range r.Answer {
+        if s, ok := k.(*dns.SRV); ok {
+          d := config.Device{}
+          d.Name = strings.TrimRight(s.Target, ".")
+          d.Address = strings.TrimRight(s.Target, ".")
+          d.User = dev.User
+          d.Password = dev.Password
+          c.getIdentity(&d)
+          realDevices = append(realDevices, d)
+        }
+      }
+    } else {
+      c.getIdentity(&dev)
+      realDevices = append(realDevices, dev)
+    }
+  }
+
+	wg.Add(len(realDevices))
+
+	for _, dev := range realDevices {
 		go func(d config.Device) {
 			c.collectForDevice(d, ch)
 			wg.Done()
@@ -197,6 +237,30 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	wg.Wait()
+}
+
+func (c *collector) getIdentity(d *config.Device) (error) {
+  cl, err := c.connect(d)
+  if err != nil {
+    log.WithFields(log.Fields{
+      "device": d.Name,
+      "error":  err,
+    }).Error("error dialing device")
+    return err
+  }
+  defer cl.Close()
+  reply, err := cl.Run("/system/identity/print")
+  if err != nil {
+    log.WithFields(log.Fields{
+      "device": d.Name,
+      "error":  err,
+    }).Error("error fetching ethernet interfaces")
+    return err
+  }
+  for _, id := range reply.Re {
+    d.Name = id.Map["name"]
+  }
+  return nil
 }
 
 func (c *collector) collectForDevice(d config.Device, ch chan<- prometheus.Metric) {

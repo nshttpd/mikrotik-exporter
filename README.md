@@ -52,6 +52,10 @@ devices:
     address: 10.10.0.2
     user: prometheus2
     password: password_to_second_router
+  - name: routers_srv_dns
+    srv: _mikrotik._udp.example.com
+    user: prometheus
+    password: password_to_all_dns_routers
 
 features:
   bgp: true
@@ -62,6 +66,10 @@ features:
   pools: true
   optics: true
 ```
+
+If you add a devices with the `srv` parameter instead of `address` the exporter will perform a DNS query
+to obtain the SRV record and discover the devices dynamically.
+
 
 ###### example output
 
