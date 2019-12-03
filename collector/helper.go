@@ -32,7 +32,9 @@ func description(prefix, name, helpText string, labelNames []string) *prometheus
 
 func splitStringToFloats(metric string) (float64, float64, error) {
 	strs := strings.Split(metric, ",")
-
+	if len(strs) == 0 {
+		return 0, 0, nil
+	}
 	m1, err := strconv.ParseFloat(strs[0], 64)
 	if err != nil {
 		return math.NaN(), math.NaN(), err

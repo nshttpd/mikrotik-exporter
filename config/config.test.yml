@@ -18,3 +18,4 @@ features:
   optics: true
   wlansta: true
   wlanif: true
+  ipsec: true

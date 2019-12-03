@@ -74,7 +74,9 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 		}).Error("error fetching routes metrics")
 		return err
 	}
-
+	if reply.Done.Map["ret"] == "" {
+		return nil
+	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -100,7 +102,9 @@ func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string
 		}).Error("error fetching routes metrics")
 		return err
 	}
-
+	if reply.Done.Map["ret"] == "" {
+		return nil
+	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{
