@@ -42,6 +42,7 @@ var (
 	withPOE     = flag.Bool("with-poe", false, "retrieves PoE metrics")
 	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
 	withOptics  = flag.Bool("with-optics", false, "retrieves optical diagnostic metrics")
+	withW60G    = flag.Bool("with-w60g", false, "retrieves w60g interface metrics")
 	withWlanSTA = flag.Bool("with-wlansta", false, "retrieves connected wlan station metrics")
 	withWlanIF  = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
 	withMonitor = flag.Bool("with-monitor", false, "retrieves ethernet interface monitor info")
@@ -200,6 +201,10 @@ func collectorOptions() []collector.Option {
 
 	if *withOptics || cfg.Features.Optics {
 		opts = append(opts, collector.WithOptics())
+	}
+
+	if *withW60G || cfg.Features.W60G {
+		opts = append(opts, collector.WithW60G())
 	}
 
 	if *withWlanSTA || cfg.Features.WlanSTA {
