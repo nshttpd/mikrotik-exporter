@@ -53,7 +53,16 @@ devices:
     user: prometheus2
     password: password_to_second_router
   - name: routers_srv_dns
-    srv: _mikrotik._udp.example.com
+    srv:
+      record: _mikrotik._udp.example.com
+    user: prometheus
+    password: password_to_all_dns_routers
+  - name: routers_srv_custom_dns
+    srv:
+      record: _mikrotik2._udp.example.com
+      dns:
+        address: 1.1.1.1
+        port: 53
     user: prometheus
     password: password_to_all_dns_routers
 
@@ -68,7 +77,8 @@ features:
 ```
 
 If you add a devices with the `srv` parameter instead of `address` the exporter will perform a DNS query
-to obtain the SRV record and discover the devices dynamically.
+to obtain the SRV record and discover the devices dynamically. Also, you can specify a DNS server to use
+on the query.
 
 
 ###### example output
