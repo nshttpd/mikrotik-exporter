@@ -29,6 +29,7 @@ var (
 	logLevel    = flag.String("log-level", "info", "log level")
 	metricsPath = flag.String("path", "/metrics", "path to answer requests on")
 	password    = flag.String("password", "", "password for authentication for single device")
+	deviceport  = flag.String("deviceport", "8728", "port for single device")
 	port        = flag.String("port", ":9436", "port number to listen on")
 	timeout     = flag.Duration("timeout", collector.DefaultTimeout, "timeout when connecting to devices")
 	tls         = flag.Bool("tls", false, "use tls to connect to routers")
@@ -121,6 +122,7 @@ func loadConfigFromFlags() (*config.Config, error) {
 				Address:  *address,
 				User:     *user,
 				Password: *password,
+				Port: *deviceport,
 			},
 		},
 	}, nil

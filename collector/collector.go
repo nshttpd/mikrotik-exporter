@@ -20,8 +20,8 @@ import (
 
 const (
 	namespace  = "mikrotik"
-	apiPort    = ":8728"
-	apiPortTLS = ":8729"
+	apiPort    = "8728"
+	apiPortTLS = "8729"
 
 	// DefaultTimeout defines the default timeout when connecting to a router
 	DefaultTimeout = 5 * time.Second
@@ -246,7 +246,10 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 
 	log.WithField("device", d.Name).Debug("trying to Dial")
 	if !c.enableTLS {
-		conn, err = net.DialTimeout("tcp", d.Address+apiPort, c.timeout)
+		if(d.Port) == "" {
+			d.Port = apiPort
+		}
+		conn, err = net.DialTimeout("tcp", d.Address+":"+d.Port, c.timeout)
 		if err != nil {
 			return nil, err
 		}
@@ -255,10 +258,13 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 		tlsCfg := &tls.Config{
 			InsecureSkipVerify: c.insecureTLS,
 		}
+		if(d.Port) == "" {
+			d.Port = apiPortTLS
+		}
 		conn, err = tls.DialWithDialer(&net.Dialer{
 			Timeout: c.timeout,
 		},
-			"tcp", d.Address+apiPortTLS, tlsCfg)
+			"tcp", d.Address+":"+d.Port, tlsCfg)
 		if err != nil {
 			return nil, err
 		}
