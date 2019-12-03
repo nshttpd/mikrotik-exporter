@@ -31,6 +31,7 @@ type Device struct {
 	Address  string `yaml:"address"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+	Port	 string `yaml:"port"`
 }
 
 // Load reads YAML from reader and unmashals in Config
