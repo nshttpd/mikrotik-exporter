@@ -26,7 +26,6 @@ const (
 	namespace  = "mikrotik"
 	apiPort    = ":8728"
 	apiPortTLS = ":8729"
-	dnsAddress = "1.1.1.1"
 	dnsPort    = 53
 
 	// DefaultTimeout defines the default timeout when connecting to a router
@@ -201,7 +200,8 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			log.WithFields(log.Fields{
 				"SRV": dev.Srv.Record,
 			}).Info("SRV configuration detected")
-			dnsServer := net.JoinHostPort(dnsAddress, strconv.Itoa(dnsPort))
+      conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+			dnsServer := net.JoinHostPort(conf.Servers[0], strconv.Itoa(dnsPort))
 			if (config.DnsServer{}) != dev.Srv.Dns {
 				dnsServer = net.JoinHostPort(dev.Srv.Dns.Address, strconv.Itoa(dev.Srv.Dns.Port))
 				log.WithFields(log.Fields{
