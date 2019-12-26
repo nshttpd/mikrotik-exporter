@@ -106,6 +106,13 @@ func WithOptics() Option {
 	}
 }
 
+// WithW60G enables w60g metrics
+func WithW60G() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, neww60gInterfaceCollector())
+	}
+}
+
 // WithWlanSTA enables wlan STA metrics
 func WithWlanSTA() Option {
 	return func(c *collector) {
