@@ -1,10 +1,8 @@
-FROM debian:9.9-slim
+FROM golang:1.13 AS builder
+WORKDIR /go/src/app
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 
-EXPOSE 9436
-
-COPY scripts/start.sh /app/
-COPY dist/mikrotik-exporter_linux_amd64 /app/mikrotik-exporter
-
-RUN chmod 755 /app/*
-
-ENTRYPOINT ["/app/start.sh"]
+FROM scratch
+COPY --from=builder /go/src/app/mikrotik-exporter /mikrotik-exporter
+ENTRYPOINT ["/mikrotik-exporter"]
