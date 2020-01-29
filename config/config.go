@@ -18,6 +18,7 @@ type Config struct {
 		POE     bool `yaml:"poe,omitempty"`
 		Pools   bool `yaml:"pools,omitempty"`
 		Optics  bool `yaml:"optics,omitempty"`
+		W60G    bool `yaml:"w60g,omitempty"`
 		WlanSTA bool `yaml:"wlansta,omitempty"`
 		WlanIF  bool `yaml:"wlanif,omitempty"`
 		Monitor bool `yaml:"monitor,omitempty"`
@@ -32,6 +33,7 @@ type Device struct {
 	Srv      SrvRecord `yaml:"srv,omitempty"`
 	User     string    `yaml:"user"`
 	Password string    `yaml:"password"`
+	Port	 string `yaml:"port"`
 }
 
 type SrvRecord struct {

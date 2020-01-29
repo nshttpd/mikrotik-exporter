@@ -93,7 +93,9 @@ func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContex
 func (c *wlanIFCollector) collectMetricForProperty(property, iface string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
 	channel := re.Map["channel"]
-
+	if re.Map[property] == "" {
+		return
+	}
 	v, err := strconv.ParseFloat(re.Map[property], 64)
 	if err != nil {
 		log.WithFields(log.Fields{

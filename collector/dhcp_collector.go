@@ -73,7 +73,9 @@ func (c *dhcpCollector) colllectForDHCPServer(ctx *collectorContext, dhcpServer 
 		}).Error("error fetching DHCP lease counts")
 		return err
 	}
-
+	if reply.Done.Map["ret"] == "" {
+		return nil
+	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{

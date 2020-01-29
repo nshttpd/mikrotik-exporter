@@ -88,7 +88,9 @@ func (c *poolCollector) collectForPool(ipVersion, topic, pool string, ctx *colle
 		}).Error("error fetching pool counts")
 		return err
 	}
-
+	if reply.Done.Map["ret"] == "" {
+		return nil
+	}
 	v, err := strconv.ParseFloat(reply.Done.Map["ret"], 32)
 	if err != nil {
 		log.WithFields(log.Fields{

@@ -50,6 +50,7 @@ devices:
     password: changeme
   - name: my_second_router
     address: 10.10.0.2
+    port: 8999
     user: prometheus2
     password: password_to_second_router
   - name: routers_srv_dns
