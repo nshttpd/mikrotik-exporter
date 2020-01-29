@@ -238,7 +238,6 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 				}
 			}
 		} else {
-			c.getIdentity(&dev)
 			realDevices = append(realDevices, dev)
 		}
 	}
