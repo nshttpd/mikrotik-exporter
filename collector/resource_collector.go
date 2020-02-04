@@ -119,20 +119,20 @@ func parseUptime(uptime string) (float64, error) {
 	// should get one and only one match back on the regex
 	if len(reMatch) != 1 {
 		return 0, fmt.Errorf("invalid uptime value sent to regex")
-	} else {
-		for i, match := range reMatch[0] {
-			if match != "" && i != 0 {
-				v, err := strconv.Atoi(match)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"uptime": uptime,
-						"value":  match,
-						"error":  err,
-					}).Error("error parsing uptime field value")
-					return float64(0), err
-				}
-				u += time.Duration(v) * uptimeParts[i-1]
+	}
+
+	for i, match := range reMatch[0] {
+		if match != "" && i != 0 {
+			v, err := strconv.Atoi(match)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"uptime": uptime,
+					"value":  match,
+					"error":  err,
+				}).Error("error parsing uptime field value")
+				return float64(0), err
 			}
+			u += time.Duration(v) * uptimeParts[i-1]
 		}
 	}
 	return u.Seconds(), nil
