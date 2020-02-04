@@ -39,6 +39,7 @@ var (
 	withBgp     = flag.Bool("with-bgp", false, "retrieves BGP routing infrormation")
 	withRoutes  = flag.Bool("with-routes", false, "retrieves routing table information")
 	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
+	withDHCPL   = flag.Bool("with-dhcpl", false, "retrieves DHCP server lease metrics")
 	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
 	withPOE     = flag.Bool("with-poe", false, "retrieves PoE metrics")
 	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
@@ -187,6 +188,10 @@ func collectorOptions() []collector.Option {
 
 	if *withDHCP || cfg.Features.DHCP {
 		opts = append(opts, collector.WithDHCP())
+	}
+
+	if *withDHCPL || cfg.Features.DHCPL {
+		opts = append(opts, collector.WithDHCPL())
 	}
 
 	if *withDHCPv6 || cfg.Features.DHCPv6 {
