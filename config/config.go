@@ -29,11 +29,21 @@ type Config struct {
 
 // Device represents a target device
 type Device struct {
-	Name     string `yaml:"name"`
-	Address  string `yaml:"address"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
+	Name     string    `yaml:"name"`
+	Address  string    `yaml:"address,omitempty"`
+	Srv      SrvRecord `yaml:"srv,omitempty"`
+	User     string    `yaml:"user"`
+	Password string    `yaml:"password"`
 	Port	 string `yaml:"port"`
+}
+
+type SrvRecord struct {
+	Record string    `yaml:"record"`
+	Dns    DnsServer `yaml:"dns,omitempty"`
+}
+type DnsServer struct {
+	Address string `yaml:"address"`
+	Port    int    `yaml:"port"`
 }
 
 // Load reads YAML from reader and unmashals in Config
