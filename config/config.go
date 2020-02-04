@@ -13,6 +13,7 @@ type Config struct {
 	Features struct {
 		BGP     bool `yaml:"bgp,omitempty"`
 		DHCP    bool `yaml:"dhcp,omitempty"`
+		DHCPL   bool `yaml:"dhcpl,omitemptu"`
 		DHCPv6  bool `yaml:"dhcpv6,omitempty"`
 		Routes  bool `yaml:"routes,omitempty"`
 		POE     bool `yaml:"poe,omitempty"`
