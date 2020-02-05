@@ -214,7 +214,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			log.WithFields(log.Fields{
 				"SRV": dev.Srv.Record,
 			}).Info("SRV configuration detected")
-      conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+			conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 			dnsServer := net.JoinHostPort(conf.Servers[0], strconv.Itoa(dnsPort))
 			if (config.DnsServer{}) != dev.Srv.Dns {
 				dnsServer = net.JoinHostPort(dev.Srv.Dns.Address, strconv.Itoa(dev.Srv.Dns.Port))
@@ -332,7 +332,7 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 
 	log.WithField("device", d.Name).Debug("trying to Dial")
 	if !c.enableTLS {
-		if(d.Port) == "" {
+		if (d.Port) == "" {
 			d.Port = apiPort
 		}
 		conn, err = net.DialTimeout("tcp", d.Address+":"+d.Port, c.timeout)
@@ -344,7 +344,7 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 		tlsCfg := &tls.Config{
 			InsecureSkipVerify: c.insecureTLS,
 		}
-		if(d.Port) == "" {
+		if (d.Port) == "" {
 			d.Port = apiPortTLS
 		}
 		conn, err = tls.DialWithDialer(&net.Dialer{

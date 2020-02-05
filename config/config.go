@@ -13,7 +13,7 @@ type Config struct {
 	Features struct {
 		BGP     bool `yaml:"bgp,omitempty"`
 		DHCP    bool `yaml:"dhcp,omitempty"`
-		DHCPL   bool `yaml:"dhcpl,omitemptu"`
+		DHCPL   bool `yaml:"dhcpl,omitempty"`
 		DHCPv6  bool `yaml:"dhcpv6,omitempty"`
 		Health  bool `yaml:"health,omitempty"`
 		Routes  bool `yaml:"routes,omitempty"`
@@ -35,7 +35,7 @@ type Device struct {
 	Srv      SrvRecord `yaml:"srv,omitempty"`
 	User     string    `yaml:"user"`
 	Password string    `yaml:"password"`
-	Port	 string `yaml:"port"`
+	Port     string    `yaml:"port"`
 }
 
 type SrvRecord struct {

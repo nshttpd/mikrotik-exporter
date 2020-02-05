@@ -125,7 +125,7 @@ func loadConfigFromFlags() (*config.Config, error) {
 				Address:  *address,
 				User:     *user,
 				Password: *password,
-				Port: *deviceport,
+				Port:     *deviceport,
 			},
 		},
 	}, nil
