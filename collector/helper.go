@@ -13,9 +13,13 @@ func metricStringCleanup(in string) string {
 }
 
 func descriptionForPropertyName(prefix, property string, labelNames []string) *prometheus.Desc {
+	return descriptionForPropertyNameHelpText(prefix, property, labelNames, property)
+}
+
+func descriptionForPropertyNameHelpText(prefix, property string, labelNames []string, helpText string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, prefix, metricStringCleanup(property)),
-		property,
+		helpText,
 		labelNames,
 		nil,
 	)

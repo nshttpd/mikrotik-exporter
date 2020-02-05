@@ -24,9 +24,10 @@ func (c *healthCollector) init() {
 	c.props = []string{"voltage", "temperature"}
 
 	labelNames := []string{"name", "address"}
+	helpText := []string{"Input voltage to the RouterOS board, in volts", "Temperature of RouterOS board, in degrees Celsius"}
 	c.descriptions = make(map[string]*prometheus.Desc)
-	for _, p := range c.props {
-		c.descriptions[p] = descriptionForPropertyName("health", p, labelNames)
+	for i, p := range c.props {
+		c.descriptions[p] = descriptionForPropertyNameHelpText("health", p, labelNames, helpText[i])
 	}
 }
 
