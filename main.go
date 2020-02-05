@@ -41,6 +41,7 @@ var (
 	withDHCP    = flag.Bool("with-dhcp", false, "retrieves DHCP server metrics")
 	withDHCPL   = flag.Bool("with-dhcpl", false, "retrieves DHCP server lease metrics")
 	withDHCPv6  = flag.Bool("with-dhcpv6", false, "retrieves DHCPv6 server metrics")
+	withHealth  = flag.Bool("with-health", false, "retrieves board Health metrics")
 	withPOE     = flag.Bool("with-poe", false, "retrieves PoE metrics")
 	withPools   = flag.Bool("with-pools", false, "retrieves IP(v6) pool metrics")
 	withOptics  = flag.Bool("with-optics", false, "retrieves optical diagnostic metrics")
@@ -196,6 +197,10 @@ func collectorOptions() []collector.Option {
 
 	if *withDHCPv6 || cfg.Features.DHCPv6 {
 		opts = append(opts, collector.WithDHCPv6())
+	}
+
+	if *withHealth || cfg.Features.Health {
+		opts = append(opts, collector.WithHealth())
 	}
 
 	if *withPOE || cfg.Features.POE {

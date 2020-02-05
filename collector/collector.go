@@ -90,6 +90,13 @@ func WithDHCPv6() Option {
 	}
 }
 
+// WithHealth enables board Health metrics
+func WithHealth() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newhealthCollector())
+	}
+}
+
 // WithPOE enables PoE metrics
 func WithPOE() Option {
 	return func(c *collector) {

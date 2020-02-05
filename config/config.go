@@ -15,6 +15,7 @@ type Config struct {
 		DHCP    bool `yaml:"dhcp,omitempty"`
 		DHCPL   bool `yaml:"dhcpl,omitemptu"`
 		DHCPv6  bool `yaml:"dhcpv6,omitempty"`
+		Health  bool `yaml:"health,omitempty"`
 		Routes  bool `yaml:"routes,omitempty"`
 		POE     bool `yaml:"poe,omitempty"`
 		Pools   bool `yaml:"pools,omitempty"`
