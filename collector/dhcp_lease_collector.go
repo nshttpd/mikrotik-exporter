@@ -1,10 +1,10 @@
 package collector
 
 import (
-	"strings"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
+	"strings"
 )
 
 type dhcpLeaseCollector struct {
