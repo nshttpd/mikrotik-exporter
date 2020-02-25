@@ -107,6 +107,8 @@ func (c *monitorCollector) valueForProp(name, value string) int {
 				return 100
 			case v == "1Gbps":
 				return 1000
+			case v == "10Gbps":
+				return 10000
 			}
 			return 0
 		}(value)
