@@ -10,6 +10,7 @@ devices:
 
 features:
   bgp: true
+  conntrack: true
   dhcp: true
   dhcpv6: true
   dhcpl: true

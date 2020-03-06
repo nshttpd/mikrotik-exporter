@@ -20,6 +20,7 @@ func TestShouldParse(t *testing.T) {
 	assertDevice("test1", "192.168.1.1", "foo", "bar", c.Devices[0], t)
 	assertDevice("test2", "192.168.2.1", "test", "123", c.Devices[1], t)
 	assertFeature("BGP", c.Features.BGP, t)
+	assertFeature("Conntrack", c.Features.Conntrack, t)
 	assertFeature("DHCP", c.Features.DHCP, t)
 	assertFeature("DHCPv6", c.Features.DHCPv6, t)
 	assertFeature("Pools", c.Features.Pools, t)
