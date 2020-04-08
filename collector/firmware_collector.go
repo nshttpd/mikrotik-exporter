@@ -19,7 +19,7 @@ func newFirmwareCollector() routerOSCollector {
 }
 
 func (c *firmwareCollector) init() {
-	labelNames := []string{"name", "disabled", "version", "build-time"}
+	labelNames := []string{"name", "disabled", "version", "build_time"}
 	c.description = description("system", "package", "system packages version", labelNames)
 }
 
@@ -28,7 +28,7 @@ func (c *firmwareCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *firmwareCollector) collect(ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/system/package/getall", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.client.Run("/system/package/getall")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -40,7 +40,11 @@ func (c *firmwareCollector) collect(ctx *collectorContext) error {
 	pkgs := reply.Re
 
 	for _, pkg := range pkgs {
-		ctx.ch <- prometheus.MustNewConstMetric(c.description, prometheus.GaugeValue, 1, pkg.Map["name"], pkg.Map["disabled"], pkg.Map["version"], pkg.Map["build-time"])
+		v := 1.0
+		if strings.Compare(pkg.Map["disabled"], "true") == 0 {
+			v = 0.0
+		}
+		ctx.ch <- prometheus.MustNewConstMetric(c.description, prometheus.GaugeValue, v, pkg.Map["name"], pkg.Map["disabled"], pkg.Map["version"], pkg.Map["build-time"])
 	}
 
 	return nil
