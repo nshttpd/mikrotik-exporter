@@ -90,6 +90,13 @@ func WithDHCPv6() Option {
 	}
 }
 
+// WithFirmware grab installed firmware and version
+func WithFirmware() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newFirmwareCollector())
+	}
+}
+
 // WithHealth enables board Health metrics
 func WithHealth() Option {
 	return func(c *collector) {
