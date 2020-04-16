@@ -17,6 +17,10 @@ be required that has read-only access to the device configuration via the API.
 Currently the exporter collects metrics for interfaces and system resources. Others
 can be added as long as published via the API.
 
+#### Dependencies
+* go
+* make
+
 #### Mikrotik Config
 
 Create a user on the device that has API and read-only access.
@@ -27,9 +31,14 @@ Create the user to access the API via.
 
 `/user add name=prometheus group=prometheus password=changeme`
 
-#### Single Device
+#### How to Run on single device
 
-`./mikrotik-exporter -address 10.10.0.1 -device my_router -password changeme -user prometheus`
+```
+git clone https://github.com/nshttpd/mikrotik-exporter.git
+cd mikrotik-exporter
+make
+./mikrotik-exporter -address 10.10.0.1 -device my_router -password changeme -user prometheus
+```
 
 where `address` is the address of your router. `device` is the label name for the device
 in the metrics output to prometheus. The `user` and `password` are the ones you
@@ -93,5 +102,3 @@ mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether6",name="my_route
 mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether7",name="my_router"} 3.18354425e+08
 mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether8",name="my_router"} 1.86405031e+08
 ```
-
- 
