@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  prom_mikrotik_exporter:
+    image: nshttpd/mikrotik-exporter:1.0.11 # replace version for latest version
+    volumes:
+      - './config:/config'
+    env_file: .env
+    ports:
+      - 9436:9436
+    restart: unless-stopped
