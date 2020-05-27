@@ -115,6 +115,13 @@ func loadConfigFromFile() (*config.Config, error) {
 }
 
 func loadConfigFromFlags() (*config.Config, error) {
+	// Attempt to read credentials from env if not already defined
+	if *user == "" {
+		*user = os.Getenv("MIKROTIK_USER")
+	}
+	if *password == "" {
+		*password = os.Getenv("MIKROTIK_PASSWORD")
+	}
 	if *device == "" || *address == "" || *user == "" || *password == "" {
 		return nil, fmt.Errorf("missing required param for single device configuration")
 	}
