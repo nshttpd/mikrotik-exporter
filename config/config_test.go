@@ -30,6 +30,7 @@ func TestShouldParse(t *testing.T) {
 	assertFeature("WlanIF", c.Features.WlanIF, t)
 	assertFeature("Ipsec", c.Features.Ipsec, t)
 	assertFeature("Lte", c.Features.Lte, t)
+	assertFeature("Netwatch", c.Features.Netwatch, t)
 }
 
 func loadTestFile(t *testing.T) []byte {

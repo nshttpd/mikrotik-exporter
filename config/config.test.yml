@@ -21,3 +21,4 @@ features:
   wlanif: true
   ipsec: true
   lte: true
+  netwatch: true

@@ -53,6 +53,7 @@ var (
 	withMonitor   = flag.Bool("with-monitor", false, "retrieves ethernet interface monitor info")
 	withIpsec     = flag.Bool("with-ipsec", false, "retrieves ipsec metrics")
 	withLte       = flag.Bool("with-lte", false, "retrieves lte metrics")
+	withNetwatch  = flag.Bool("with-netwatch", false, "retrieves netwatch metrics")
 
 	cfg *config.Config
 
@@ -256,6 +257,10 @@ func collectorOptions() []collector.Option {
 
 	if *withLte || cfg.Features.Lte {
 		opts = append(opts, collector.WithLte())
+	}
+
+	if *withNetwatch || cfg.Features.Netwatch {
+		opts = append(opts, collector.WithNetwatch())
 	}
 
 	if *timeout != collector.DefaultTimeout {
