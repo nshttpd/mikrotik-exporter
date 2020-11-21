@@ -179,6 +179,11 @@ func WithIpsec() Option {
 func WithConntrack() Option {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, newConntrackCollector())
+
+// WithLte enables lte metrics
+func WithLte() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newLteCollector())
 	}
 }
 

@@ -52,6 +52,7 @@ var (
 	withWlanIF    = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
 	withMonitor   = flag.Bool("with-monitor", false, "retrieves ethernet interface monitor info")
 	withIpsec     = flag.Bool("with-ipsec", false, "retrieves ipsec metrics")
+	withLte       = flag.Bool("with-lte", false, "retrieves lte metrics")
 
 	cfg *config.Config
 
@@ -251,6 +252,10 @@ func collectorOptions() []collector.Option {
 
 	if *withConntrack || cfg.Features.Conntrack {
 		opts = append(opts, collector.WithConntrack())
+	}
+
+	if *withLte || cfg.Features.Lte {
+		opts = append(opts, collector.WithLte())
 	}
 
 	if *timeout != collector.DefaultTimeout {
