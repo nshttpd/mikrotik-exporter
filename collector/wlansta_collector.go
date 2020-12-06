@@ -21,7 +21,7 @@ func newWlanSTACollector() routerOSCollector {
 }
 
 func (c *wlanSTACollector) init() {
-	c.props = []string{"interface", "mac-address", "signal-to-noise", "signal-strength-ch0", "packets", "bytes", "frames"}
+	c.props = []string{"interface", "mac-address", "uptime", "signal-to-noise", "signal-strength-ch0", "signal-strength-ch1", "tx-ccq", "rx-rate", "tx-rate", "packets", "bytes", "frames"}
 	labelNames := []string{"name", "address", "interface", "mac_address"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[:len(c.props)-3] {
@@ -78,10 +78,20 @@ func (c *wlanSTACollector) collectForStat(re *proto.Sentence, ctx *collectorCont
 }
 
 func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string, re *proto.Sentence, ctx *collectorContext) {
-	if re.Map[property] == "" {
-		return
+	var v float64
+	var err error
+	valueType := prometheus.GaugeValue
+
+	switch property {
+	case "uptime":
+		valueType = prometheus.CounterValue
+		v, err = parseDuration(re.Map[property])
+	case "rx-rate", "tx-rate":
+		v, err = parseWirelessRate(re.Map[property])
+	default:
+		v, err = strconv.ParseFloat(re.Map[property], 64)
 	}
-	v, err := strconv.ParseFloat(re.Map[property], 64)
+
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device":   ctx.device.Name,
@@ -93,7 +103,7 @@ func (c *wlanSTACollector) collectMetricForProperty(property, iface, mac string,
 	}
 
 	desc := c.descriptions[property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, mac)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, valueType, v, ctx.device.Name, ctx.device.Address, iface, mac)
 }
 
 func (c *wlanSTACollector) collectMetricForTXRXCounters(property, iface, mac string, re *proto.Sentence, ctx *collectorContext) {

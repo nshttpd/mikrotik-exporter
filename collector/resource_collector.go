@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -82,14 +81,12 @@ func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorCon
 func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	var v float64
 	var err error
-	//	const boardname = "BOARD"
-	//	const version = "3.33.3"
 
 	boardname := re.Map["board-name"]
 	version := re.Map["version"]
 
 	if property == "uptime" {
-		v, err = parseUptime(re.Map[property])
+		v, err = parseDuration(re.Map[property])
 	} else {
 		if re.Map[property] == "" {
 			return
@@ -109,31 +106,4 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 
 	desc := c.descriptions[property]
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, boardname, version)
-}
-
-func parseUptime(uptime string) (float64, error) {
-	var u time.Duration
-
-	reMatch := uptimeRegex.FindAllStringSubmatch(uptime, -1)
-
-	// should get one and only one match back on the regex
-	if len(reMatch) != 1 {
-		return 0, fmt.Errorf("invalid uptime value sent to regex")
-	}
-
-	for i, match := range reMatch[0] {
-		if match != "" && i != 0 {
-			v, err := strconv.Atoi(match)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"uptime": uptime,
-					"value":  match,
-					"error":  err,
-				}).Error("error parsing uptime field value")
-				return float64(0), err
-			}
-			u += time.Duration(v) * uptimeParts[i-1]
-		}
-	}
-	return u.Seconds(), nil
 }
