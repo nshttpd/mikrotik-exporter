@@ -1,10 +1,12 @@
 package collector
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
-	"strings"
 )
 
 type dhcpLeaseCollector struct {
@@ -13,7 +15,7 @@ type dhcpLeaseCollector struct {
 }
 
 func (c *dhcpLeaseCollector) init() {
-	c.props = []string{"active-mac-address", "status", "expires-after", "active-address", "host-name"}
+	c.props = []string{"active-mac-address", "server", "status", "expires-after", "active-address", "host-name"}
 
 	labelNames := []string{"name", "address", "activemacaddress", "status", "expiresafter", "activeaddress", "hostname"}
 	c.descriptions = description("dhcp", "leases_metrics", "number of metrics", labelNames)
@@ -44,7 +46,7 @@ func (c *dhcpLeaseCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *dhcpLeaseCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.client.Run("/ip/dhcp-server/lease/print", "?status=bound", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -59,11 +61,22 @@ func (c *dhcpLeaseCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sentence) {
 	v := 1.0
 
+	f, err := parseDuration(re.Map["expires-after"])
+	if err != nil {
+		log.WithFields(log.Fields{
+			"device":   ctx.device.Name,
+			"property": "expires-after",
+			"value":    re.Map["expires-after"],
+			"error":    err,
+		}).Error("error parsing duration metric value")
+		return
+	}
+
 	activemacaddress := re.Map["active-mac-address"]
+	server := re.Map["server"]
 	status := re.Map["status"]
-	expiresafter := re.Map["expires-after"]
 	activeaddress := re.Map["active-address"]
 	hostname := re.Map["host-name"]
 
-	ctx.ch <- prometheus.MustNewConstMetric(c.descriptions, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, activemacaddress, status, expiresafter, activeaddress, hostname)
+	ctx.ch <- prometheus.MustNewConstMetric(c.descriptions, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
 }
