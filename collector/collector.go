@@ -175,6 +175,13 @@ func WithIpsec() Option {
 	}
 }
 
+// WithOSPFNeighbor enables OSPF neighbor collector metrics
+func WithOSPFNeighbor() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newOSPFNeighborCollector())
+	}
+}
+
 // Option applies options to collector
 type Option func(*collector)
 
