@@ -17,7 +17,7 @@ type dhcpLeaseCollector struct {
 func (c *dhcpLeaseCollector) init() {
 	c.props = []string{"active-mac-address", "server", "status", "expires-after", "active-address", "host-name"}
 
-	labelNames := []string{"name", "address", "activemacaddress", "status", "expiresafter", "activeaddress", "hostname"}
+	labelNames := []string{"name", "address", "activemacaddress", "server", "status", "expiresafter", "activeaddress", "hostname"}
 	c.descriptions = description("dhcp", "leases_metrics", "number of metrics", labelNames)
 
 }
