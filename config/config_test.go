@@ -28,6 +28,7 @@ func TestShouldParse(t *testing.T) {
 	assertFeature("WlanSTA", c.Features.WlanSTA, t)
 	assertFeature("WlanIF", c.Features.WlanIF, t)
 	assertFeature("Ipsec", c.Features.Ipsec, t)
+	assertFeature("OSPFNeighbor", c.Features.OSPFNeighbor, t)
 }
 
 func loadTestFile(t *testing.T) []byte {

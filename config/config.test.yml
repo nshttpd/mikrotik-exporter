@@ -19,3 +19,4 @@ features:
   wlansta: true
   wlanif: true
   ipsec: true
+  ospf-neighbor: true

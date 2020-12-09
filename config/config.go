@@ -11,21 +11,22 @@ import (
 type Config struct {
 	Devices  []Device `yaml:"devices"`
 	Features struct {
-		BGP      bool `yaml:"bgp,omitempty"`
-		DHCP     bool `yaml:"dhcp,omitempty"`
-		DHCPL    bool `yaml:"dhcpl,omitempty"`
-		DHCPv6   bool `yaml:"dhcpv6,omitempty"`
-		Firmware bool `yaml:"firmware,omitempty"`
-		Health   bool `yaml:"health,omitempty"`
-		Routes   bool `yaml:"routes,omitempty"`
-		POE      bool `yaml:"poe,omitempty"`
-		Pools    bool `yaml:"pools,omitempty"`
-		Optics   bool `yaml:"optics,omitempty"`
-		W60G     bool `yaml:"w60g,omitempty"`
-		WlanSTA  bool `yaml:"wlansta,omitempty"`
-		WlanIF   bool `yaml:"wlanif,omitempty"`
-		Monitor  bool `yaml:"monitor,omitempty"`
-		Ipsec    bool `yaml:"ipsec,omitempty"`
+		BGP          bool `yaml:"bgp,omitempty"`
+		DHCP         bool `yaml:"dhcp,omitempty"`
+		DHCPL        bool `yaml:"dhcpl,omitempty"`
+		DHCPv6       bool `yaml:"dhcpv6,omitempty"`
+		Firmware     bool `yaml:"firmware,omitempty"`
+		Health       bool `yaml:"health,omitempty"`
+		Routes       bool `yaml:"routes,omitempty"`
+		POE          bool `yaml:"poe,omitempty"`
+		Pools        bool `yaml:"pools,omitempty"`
+		Optics       bool `yaml:"optics,omitempty"`
+		W60G         bool `yaml:"w60g,omitempty"`
+		WlanSTA      bool `yaml:"wlansta,omitempty"`
+		WlanIF       bool `yaml:"wlanif,omitempty"`
+		Monitor      bool `yaml:"monitor,omitempty"`
+		Ipsec        bool `yaml:"ipsec,omitempty"`
+		OSPFNeighbor bool `yaml:"ospf-neighbor,omitempty"`
 	} `yaml:"features,omitempty"`
 }
 
