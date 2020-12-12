@@ -21,11 +21,11 @@ func newInterfaceCollector() routerOSCollector {
 }
 
 func (c *interfaceCollector) init() {
-	c.props = []string{"name", "type", "disabled", "comment", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
+	c.props = []string{"name", "type", "disabled", "comment", "slave", "actual-mtu", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
 
-	labelNames := []string{"name", "address", "interface", "type", "disabled", "comment", "running"}
+	labelNames := []string{"name", "address", "interface", "type", "disabled", "comment", "running", "slave"}
 	c.descriptions = make(map[string]*prometheus.Desc)
-	for _, p := range c.props[4:] {
+	for _, p := range c.props[5:] {
 		c.descriptions[p] = descriptionForPropertyName("interface", p, labelNames)
 	}
 }
@@ -63,7 +63,7 @@ func (c *interfaceCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 }
 
 func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	for _, p := range c.props[4:] {
+	for _, p := range c.props[5:] {
 		c.collectMetricForProperty(p, re, ctx)
 	}
 }
@@ -71,8 +71,10 @@ func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorCo
 func (c *interfaceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
-		var v float64
-		var err error
+		var (
+			v   float64
+			err error
+		)
 		switch property {
 		case "running":
 			if value == "true" {
@@ -93,6 +95,7 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 				return
 			}
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, re.Map["name"], re.Map["type"], re.Map["disabled"], re.Map["running"], re.Map["comment"])
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address,
+			re.Map["name"], re.Map["type"], re.Map["disabled"], re.Map["comment"], re.Map["running"], re.Map["slave"])
 	}
 }
