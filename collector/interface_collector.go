@@ -21,7 +21,7 @@ func newInterfaceCollector() routerOSCollector {
 }
 
 func (c *interfaceCollector) init() {
-	c.props = []string{"name", "comment", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
+	c.props = []string{"name", "comment", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
 
 	labelNames := []string{"name", "address", "interface", "comment"}
 	c.descriptions = make(map[string]*prometheus.Desc)
@@ -74,16 +74,31 @@ func (c *interfaceCollector) collectForStat(re *proto.Sentence, ctx *collectorCo
 func (c *interfaceCollector) collectMetricForProperty(property, iface, comment string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
-		v, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"device":    ctx.device.Name,
-				"interface": iface,
-				"property":  property,
-				"value":     value,
-				"error":     err,
-			}).Error("error parsing interface metric value")
-			return
+		boolmap := map[string]float64{
+			"true":  1,
+			"false": 0,
+		}
+
+		var v float64
+		val, ok := boolmap[value]
+		// Map true/false strings to int values.
+		// Continue if value isn't "true" or "false"
+		if ok {
+			v = val
+		} else {
+			// Declare early, as assignment can't be used for previously declared 'v'
+			var err error
+			v, err = strconv.ParseFloat(value, 64)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"device":    ctx.device.Name,
+					"interface": iface,
+					"property":  property,
+					"value":     value,
+					"error":     err,
+				}).Error("error parsing interface metric value")
+				return
+			}
 		}
 		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface, comment)
 	}
