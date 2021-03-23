@@ -35,6 +35,14 @@ where `address` is the address of your router. `device` is the label name for th
 in the metrics output to prometheus. The `user` and `password` are the ones you
 created for the exporter to use to access the API.
 
+User and password flags can be set with the `MIKROTIK_USER` and `MIKROTIK_PASSWORD` environment variables, respectively.
+
+```
+MIKROTIK_USER=prometheus
+MIKROTIK_PASSWORD=changeme
+./mikrotik-exporter -address 10.10.0.1 -device my_router
+```
+
 #### Config File
 
 `./mikrotik-exporter -config-file config.yml`
