@@ -20,3 +20,4 @@ features:
   wlansta: true
   wlanif: true
   ipsec: true
+  lte: true

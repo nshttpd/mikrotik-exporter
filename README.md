@@ -23,6 +23,10 @@ Create a user on the device that has API and read-only access.
 
 `/user group add name=prometheus policy=api,read,winbox`
 
+If `lte` is enabled it requires also the `test` policy.
+
+`/user group add name=prometheus policy=api,read,winbox,test`
+
 Create the user to access the API via.
 
 `/user add name=prometheus group=prometheus password=changeme`

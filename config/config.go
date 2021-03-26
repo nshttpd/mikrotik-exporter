@@ -27,6 +27,7 @@ type Config struct {
 		WlanIF    bool `yaml:"wlanif,omitempty"`
 		Monitor   bool `yaml:"monitor,omitempty"`
 		Ipsec     bool `yaml:"ipsec,omitempty"`
+		Lte       bool `yaml:"lte,omitempty"`
 	} `yaml:"features,omitempty"`
 }
 
