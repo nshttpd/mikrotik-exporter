@@ -60,6 +60,8 @@ func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error
 		return nil, err
 	}
 
+	log.Debug("%v", reply)
+
 	return reply.Re, nil
 }
 
