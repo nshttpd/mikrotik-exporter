@@ -35,13 +35,13 @@ const (
 var (
 	scrapeDurationDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "scrape", "collector_duration_seconds"),
-		"mikrotik_exporter: duration of a collector scrape",
+		"mikrotik_exporter: duration of a device collector scrape",
 		[]string{"device"},
 		nil,
 	)
 	scrapeSuccessDesc = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "scrape", "collector_success"),
-		"mikrotik_exporter: whether a collector succeeded",
+		"mikrotik_exporter: whether a device collector succeeded",
 		[]string{"device"},
 		nil,
 	)
@@ -275,7 +275,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 					d.Address = strings.TrimRight(s.Target, ".")
 					d.User = dev.User
 					d.Password = dev.Password
-					c.getIdentity(&d)
+					_ := c.getIdentity(&d)
 					realDevices = append(realDevices, d)
 				}
 			}
@@ -302,7 +302,7 @@ func (c *collector) getIdentity(d *config.Device) error {
 		log.WithFields(log.Fields{
 			"device": d.Name,
 			"error":  err,
-		}).Error("error dialing device")
+		}).Error("error dialing device fetching identity")
 		return err
 	}
 	defer cl.Close()
