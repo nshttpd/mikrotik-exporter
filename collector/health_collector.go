@@ -2,7 +2,6 @@ package collector
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -51,7 +50,7 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/system/health/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.client.Run("/system/health/print")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
