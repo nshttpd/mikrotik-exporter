@@ -164,7 +164,7 @@ func WithTimeout(d time.Duration) Option {
 func WithTLS(insecure bool) Option {
 	return func(c *collector) {
 		c.enableTLS = true
-		c.insecureTLS = true
+		c.insecureTLS = insecure
 	}
 }
 
