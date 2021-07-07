@@ -21,8 +21,7 @@ func newInterfaceCollector() routerOSCollector {
 }
 
 func (c *interfaceCollector) init() {
-	c.props = []string{"name", "type", "disabled", "comment", "slave", "actual-mtu", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop"}
-
+	c.props = []string{"name", "type", "disabled", "comment", "slave", "actual-mtu", "running", "rx-byte", "tx-byte", "rx-packet", "tx-packet", "rx-error", "tx-error", "rx-drop", "tx-drop", "link-downs"}
 	labelNames := []string{"name", "address", "interface", "type", "disabled", "comment", "running", "slave"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props[5:] {
