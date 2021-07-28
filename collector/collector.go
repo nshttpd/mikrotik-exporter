@@ -140,6 +140,13 @@ func WithWlanSTA() Option {
 }
 
 // WithWlanIF enables wireless interface metrics
+func WithCapsman() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newCapsmanCollector())
+	}
+}
+
+// WithWlanIF enables wireless interface metrics
 func WithWlanIF() Option {
 	return func(c *collector) {
 		c.collectors = append(c.collectors, newWlanIFCollector())

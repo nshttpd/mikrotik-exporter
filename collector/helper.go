@@ -13,11 +13,11 @@ import (
 )
 
 var durationRegex *regexp.Regexp
-var durationParts [5]time.Duration
+var durationParts [6]time.Duration
 
 func init() {
-	durationRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?`)
-	durationParts = [5]time.Duration{time.Hour * 168, time.Hour * 24, time.Hour, time.Minute, time.Second}
+	durationRegex = regexp.MustCompile(`(?:(\d*)w)?(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?(?:(\d*)ms)?`)
+	durationParts = [6]time.Duration{time.Hour * 168, time.Hour * 24, time.Hour, time.Minute, time.Second, time.Millisecond}
 }
 
 func metricStringCleanup(in string) string {
@@ -39,7 +39,7 @@ func descriptionForPropertyNameHelpText(prefix, property string, labelNames []st
 
 func description(prefix, name, helpText string, labelNames []string) *prometheus.Desc {
 	return prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, prefix, name),
+		prometheus.BuildFQName(namespace, prefix, metricStringCleanup(name)),
 		helpText,
 		labelNames,
 		nil,

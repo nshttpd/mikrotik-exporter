@@ -50,6 +50,7 @@ var (
 	withW60G      = flag.Bool("with-w60g", false, "retrieves w60g interface metrics")
 	withWlanSTA   = flag.Bool("with-wlansta", false, "retrieves connected wlan station metrics")
 	withWlanIF    = flag.Bool("with-wlanif", false, "retrieves wlan interface metrics")
+	withCapsman   = flag.Bool("with-capsman", false, "retrieves capsman station metrics")
 	withMonitor   = flag.Bool("with-monitor", false, "retrieves ethernet interface monitor info")
 	withIpsec     = flag.Bool("with-ipsec", false, "retrieves ipsec metrics")
 	withLte       = flag.Bool("with-lte", false, "retrieves lte metrics")
@@ -236,6 +237,10 @@ func collectorOptions() []collector.Option {
 
 	if *withWlanSTA || cfg.Features.WlanSTA {
 		opts = append(opts, collector.WithWlanSTA())
+	}
+
+	if *withCapsman || cfg.Features.Capsman {
+		opts = append(opts, collector.WithCapsman())
 	}
 
 	if *withWlanIF || cfg.Features.WlanIF {
