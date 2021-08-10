@@ -7,7 +7,7 @@ require (
 	github.com/miekg/dns v1.1.43
 	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/common v0.9.1
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
