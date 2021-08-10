@@ -24,6 +24,7 @@ type Config struct {
 		Optics    bool `yaml:"optics,omitempty"`
 		W60G      bool `yaml:"w60g,omitempty"`
 		WlanSTA   bool `yaml:"wlansta,omitempty"`
+		Capsman   bool `yaml:"capsman,omitempty"`
 		WlanIF    bool `yaml:"wlanif,omitempty"`
 		Monitor   bool `yaml:"monitor,omitempty"`
 		Ipsec     bool `yaml:"ipsec,omitempty"`
