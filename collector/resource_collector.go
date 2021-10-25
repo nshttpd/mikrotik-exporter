@@ -81,6 +81,7 @@ func (c *resourceCollector) collectForStat(re *proto.Sentence, ctx *collectorCon
 
 func (c *resourceCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	var v float64
+	var vtype prometheus.ValueType
 	var err error
 	//	const boardname = "BOARD"
 	//	const version = "3.33.3"
@@ -90,11 +91,13 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 
 	if property == "uptime" {
 		v, err = parseUptime(re.Map[property])
+		vtype = prometheus.CounterValue
 	} else {
 		if re.Map[property] == "" {
 			return
 		}
 		v, err = strconv.ParseFloat(re.Map[property], 64)
+		vtype = prometheus.GaugeValue
 	}
 
 	if err != nil {
@@ -108,7 +111,7 @@ func (c *resourceCollector) collectMetricForProperty(property string, re *proto.
 	}
 
 	desc := c.descriptions[property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, boardname, version)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, ctx.device.Name, ctx.device.Address, boardname, version)
 }
 
 func parseUptime(uptime string) (float64, error) {

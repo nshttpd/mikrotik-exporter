@@ -71,16 +71,23 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
 		var (
-			v   float64
-			err error
+			v     float64
+			vtype prometheus.ValueType
+			err   error
 		)
+		vtype = prometheus.CounterValue
+
 		switch property {
 		case "running":
+			vtype = prometheus.GaugeValue
 			if value == "true" {
 				v = 1
 			} else {
 				v = 0
 			}
+		case "actual-mtu":
+			vtype = prometheus.GaugeValue
+			fallthrough
 		default:
 			v, err = strconv.ParseFloat(value, 64)
 			if err != nil {
@@ -94,7 +101,8 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 				return
 			}
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address,
+		ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, ctx.device.Name, ctx.device.Address,
 			re.Map["name"], re.Map["type"], re.Map["disabled"], re.Map["comment"], re.Map["running"], re.Map["slave"])
+
 	}
 }
