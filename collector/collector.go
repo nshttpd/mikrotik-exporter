@@ -275,7 +275,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 					d.Address = strings.TrimRight(s.Target, ".")
 					d.User = dev.User
 					d.Password = dev.Password
-					_ := c.getIdentity(&d)
+					_ = c.getIdentity(&d)
 					realDevices = append(realDevices, d)
 				}
 			}
