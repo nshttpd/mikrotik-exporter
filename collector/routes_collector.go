@@ -26,7 +26,7 @@ func (c *routesCollector) init() {
 	c.countDesc = description(prefix, "total_count", "number of routes in RIB", labelNames)
 	c.countProtocolDesc = description(prefix, "protocol_count", "number of routes per protocol in RIB", append(labelNames, "protocol"))
 
-	c.protocols = []string{"bgp", "static", "ospf", "dynamic", "connect"}
+	c.protocols = []string{"bgp", "static", "ospf", "dynamic", "connect", "rip"}
 }
 
 func (c *routesCollector) describe(ch chan<- *prometheus.Desc) {
