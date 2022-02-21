@@ -175,7 +175,13 @@ func createMetricsHandler() (http.Handler, error) {
 		return nil, err
 	}
 
+	promhttp.Handler()
+
 	registry := prometheus.NewRegistry()
+	err = registry.Register(prometheus.NewGoCollector())
+	if err != nil {
+		return nil, err
+	}
 	err = registry.Register(nc)
 	if err != nil {
 		return nil, err
