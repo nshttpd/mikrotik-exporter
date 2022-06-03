@@ -1,12 +1,10 @@
 package collector
 
 import (
-	"strconv"
-	"strings"
-
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/routeros.v2/proto"
+	"strconv"
 )
 
 type healthCollector struct {
@@ -51,7 +49,7 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/system/health/print", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.client.Run("/system/health/print")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -64,30 +62,24 @@ func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error
 }
 
 func (c *healthCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
-	for _, p := range c.props[:3] {
-		c.collectMetricForProperty(p, re, ctx)
-	}
-}
-
-func (c *healthCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	var v float64
 	var err error
 
-	if re.Map[property] == "" {
+	if re.Map["value"] == "" {
 		return
 	}
-	v, err = strconv.ParseFloat(re.Map[property], 64)
+	v, err = strconv.ParseFloat(re.Map["value"], 64)
 
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device":   ctx.device.Name,
-			"property": property,
-			"value":    re.Map[property],
+			"property": re.Map["name"],
+			"value":    re.Map["value"],
 			"error":    err,
 		}).Error("error parsing system health metric value")
 		return
 	}
 
-	desc := c.descriptions[property]
+	desc := c.descriptions[re.Map["name"]]
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address)
 }
