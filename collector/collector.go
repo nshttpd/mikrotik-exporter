@@ -48,11 +48,9 @@ var (
 )
 
 type collector struct {
-	devices     []config.Device
-	collectors  []routerOSCollector
-	timeout     time.Duration
-	enableTLS   bool
-	insecureTLS bool
+	devices    []config.Device
+	collectors []routerOSCollector
+	timeout    time.Duration
 }
 
 // WithBGP enables BGP routing metrics
@@ -164,14 +162,6 @@ func Monitor() Option {
 func WithTimeout(d time.Duration) Option {
 	return func(c *collector) {
 		c.timeout = d
-	}
-}
-
-// WithTLS enables TLS
-func WithTLS(insecure bool) Option {
-	return func(c *collector) {
-		c.enableTLS = true
-		c.insecureTLS = insecure
 	}
 }
 
@@ -366,7 +356,7 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 	var err error
 
 	log.WithField("device", d.Name).Debug("trying to Dial")
-	if !c.enableTLS {
+	if !d.EnableTLS {
 		if (d.Port) == "" {
 			d.Port = apiPort
 		}
@@ -377,7 +367,7 @@ func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
 		//		return routeros.DialTimeout(d.Address+apiPort, d.User, d.Password, c.timeout)
 	} else {
 		tlsCfg := &tls.Config{
-			InsecureSkipVerify: c.insecureTLS,
+			InsecureSkipVerify: d.InsecureTLS,
 		}
 		if (d.Port) == "" {
 			d.Port = apiPortTLS

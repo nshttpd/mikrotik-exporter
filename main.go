@@ -133,11 +133,13 @@ func loadConfigFromFlags() (*config.Config, error) {
 	return &config.Config{
 		Devices: []config.Device{
 			config.Device{
-				Name:     *device,
-				Address:  *address,
-				User:     *user,
-				Password: *password,
-				Port:     *deviceport,
+				Name:        *device,
+				Address:     *address,
+				User:        *user,
+				Password:    *password,
+				Port:        *deviceport,
+				EnableTLS:   *tls,
+				InsecureTLS: *insecure,
 			},
 		},
 	}, nil
@@ -276,10 +278,6 @@ func collectorOptions() []collector.Option {
 
 	if *timeout != collector.DefaultTimeout {
 		opts = append(opts, collector.WithTimeout(*timeout))
-	}
-
-	if *tls {
-		opts = append(opts, collector.WithTLS(*insecure))
 	}
 
 	return opts
