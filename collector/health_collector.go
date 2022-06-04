@@ -42,7 +42,11 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 	}
 
 	for _, re := range stats {
-		c.collectForStat(re, ctx)
+		if metric, ok := re.Map["name"]; ok {
+			c.collectMetricForProperty(metric, re, ctx)
+		} else {
+			c.collectForStat(re, ctx)
+		}
 	}
 
 	return nil
@@ -62,24 +66,36 @@ func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error
 }
 
 func (c *healthCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
+	for _, p := range c.props[:3] {
+		c.collectMetricForProperty(p, re, ctx)
+	}
+}
+
+func (c *healthCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *collectorContext) {
 	var v float64
 	var err error
 
-	if re.Map["value"] == "" {
-		return
+	name := property
+	value := re.Map[property]
+
+	if value == "" {
+		var ok bool
+		if value, ok = re.Map["value"]; !ok {
+			return
+		}
 	}
-	v, err = strconv.ParseFloat(re.Map["value"], 64)
+	v, err = strconv.ParseFloat(value, 64)
 
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device":   ctx.device.Name,
-			"property": re.Map["name"],
-			"value":    re.Map["value"],
+			"property": name,
+			"value":    value,
 			"error":    err,
 		}).Error("error parsing system health metric value")
 		return
 	}
 
-	desc := c.descriptions[re.Map["name"]]
+	desc := c.descriptions[name]
 	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address)
 }
