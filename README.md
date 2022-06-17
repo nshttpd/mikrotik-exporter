@@ -60,6 +60,9 @@ devices:
     address: 10.10.0.1
     user: prometheus
     password: changeme
+    port: 8729
+    tls: true
+    insecure: true
   - name: my_second_router
     address: 10.10.0.2
     port: 8999

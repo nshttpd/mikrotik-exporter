@@ -1,10 +1,11 @@
 package config
 
 import (
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Config represents the configuration for the exporter
@@ -35,12 +36,14 @@ type Config struct {
 
 // Device represents a target device
 type Device struct {
-	Name     string    `yaml:"name"`
-	Address  string    `yaml:"address,omitempty"`
-	Srv      SrvRecord `yaml:"srv,omitempty"`
-	User     string    `yaml:"user"`
-	Password string    `yaml:"password"`
-	Port     string    `yaml:"port"`
+	Name        string    `yaml:"name"`
+	Address     string    `yaml:"address,omitempty"`
+	Srv         SrvRecord `yaml:"srv,omitempty"`
+	User        string    `yaml:"user"`
+	Password    string    `yaml:"password"`
+	Port        string    `yaml:"port,omitempty"`
+	EnableTLS   bool      `yaml:"tls,omitempty"`
+	InsecureTLS bool      `yaml:"insecure,omitempty"`
 }
 
 type SrvRecord struct {
@@ -52,7 +55,7 @@ type DnsServer struct {
 	Port    int    `yaml:"port"`
 }
 
-// Load reads YAML from reader and unmashals in Config
+// Load reads YAML from reader and unmarshalls in Config
 func Load(r io.Reader) (*Config, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -66,4 +69,16 @@ func Load(r io.Reader) (*Config, error) {
 	}
 
 	return c, nil
+}
+
+func (d *Device) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type inputDevice Device
+	defaults := &inputDevice{Port: "8728", EnableTLS: false, InsecureTLS: false}
+	err := unmarshal(defaults)
+	if err != nil {
+		log.WithError(err).Error("Device unmarshal error")
+		return err
+	}
+	*d = (Device)(*defaults)
+	return nil
 }
