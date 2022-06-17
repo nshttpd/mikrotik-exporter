@@ -76,7 +76,8 @@ func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sent
 	server := re.Map["server"]
 	status := re.Map["status"]
 	activeaddress := re.Map["active-address"]
-	hostname := re.Map["host-name"]
+	// QuoteToASCII because of broken DHCP clients
+	hostname := strconv.QuoteToASCII(re.Map["host-name"])
 
 	metric, err := prometheus.NewConstMetric(c.descriptions, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, activemacaddress, server, status, strconv.FormatFloat(f, 'f', 0, 64), activeaddress, hostname)
 	if err != nil {
