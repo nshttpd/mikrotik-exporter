@@ -21,10 +21,10 @@ func newNetwatchCollector() routerOSCollector {
 }
 
 func (c *netwatchCollector) init() {
-	c.props = []string{"host", "comment", "status"}
-	labelNames := []string{"name", "address", "host", "comment"}
+	c.props = []string{"host", "comment", "disabled", "status"}
+	labelNames := []string{"name", "address", "host", "comment", "disabled"}
 	c.descriptions = make(map[string]*prometheus.Desc)
-	for _, p := range c.props[1:] {
+	for _, p := range c.props[3:] {
 		c.descriptions[p] = descriptionForPropertyName("netwatch", p, labelNames)
 	}
 }
@@ -49,7 +49,7 @@ func (c *netwatchCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/tool/netwatch/print", "?disabled=false", "=.proplist="+strings.Join(c.props, ","))
+	reply, err := ctx.client.Run("/tool/netwatch/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -64,13 +64,14 @@ func (c *netwatchCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, err
 func (c *netwatchCollector) collectForStat(re *proto.Sentence, ctx *collectorContext) {
 	host := re.Map["host"]
 	comment := re.Map["comment"]
+	disabled := re.Map["disabled"]
 
-	for _, p := range c.props[2:] {
-		c.collectMetricForProperty(p, host, comment, re, ctx)
+	for _, p := range c.props[3:] {
+		c.collectMetricForProperty(p, host, comment, disabled, re, ctx)
 	}
 }
 
-func (c *netwatchCollector) collectMetricForProperty(property, host, comment string, re *proto.Sentence, ctx *collectorContext) {
+func (c *netwatchCollector) collectMetricForProperty(property, host, comment, disabled string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
 	if value := re.Map[property]; value != "" {
 		var numericValue float64
@@ -90,6 +91,6 @@ func (c *netwatchCollector) collectMetricForProperty(property, host, comment str
 				"error":    fmt.Errorf("unexpected netwatch status value"),
 			}).Error("error parsing netwatch metric value")
 		}
-		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, ctx.device.Name, ctx.device.Address, host, comment)
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, numericValue, ctx.device.Name, ctx.device.Address, host, comment, disabled)
 	}
 }
