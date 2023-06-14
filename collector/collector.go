@@ -203,6 +203,13 @@ func WithNetwatch() Option {
 	}
 }
 
+// WithCloud enables cloud service metrics
+func WithCloud() Option {
+	return func(c *collector) {
+		c.collectors = append(c.collectors, newCloudCollector())
+	}
+}
+
 // Option applies options to collector
 type Option func(*collector)
 
