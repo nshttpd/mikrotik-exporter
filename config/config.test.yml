@@ -22,3 +22,4 @@ features:
   ipsec: true
   lte: true
   netwatch: true
+  cloud: true
