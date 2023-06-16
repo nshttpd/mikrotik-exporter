@@ -87,7 +87,7 @@ func TestCloudCollectTrue(t *testing.T) {
 	m := <-metrics
 
 	assert.NoError(t, nil, m.Write(&pb))
-	assert.Equal(t, float64(1), pb.Counter.GetValue(), "excpeted output should be 0 for false")
+	assert.Equal(t, float64(1), pb.Counter.GetValue(), "excpeted output should be 1 for true")
 }
 
 func getFakeClient(t *testing.T, state string) *routeros.Client {
