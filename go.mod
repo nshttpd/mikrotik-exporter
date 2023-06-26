@@ -8,8 +8,7 @@ require (
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.2
-	golang.org/x/net v0.11.0 // indirect
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/routeros.v2 v2.0.0-20190905230420-1bbf141cdd91
