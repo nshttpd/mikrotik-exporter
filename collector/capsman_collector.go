@@ -120,8 +120,8 @@ func (c *capsmanCollector) collectMetricForTXRXCounters(property, iface, mac, ss
 		}).Error("error parsing capsman station metric value")
 		return
 	}
-	desc_tx := c.descriptions["tx_"+property]
-	desc_rx := c.descriptions["rx_"+property]
-	ctx.ch <- prometheus.MustNewConstMetric(desc_tx, prometheus.CounterValue, tx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
-	ctx.ch <- prometheus.MustNewConstMetric(desc_rx, prometheus.CounterValue, rx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
+	descTx := c.descriptions["tx_"+property]
+	descRx := c.descriptions["rx_"+property]
+	ctx.ch <- prometheus.MustNewConstMetric(descTx, prometheus.CounterValue, tx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
+	ctx.ch <- prometheus.MustNewConstMetric(descRx, prometheus.CounterValue, rx, ctx.device.Name, ctx.device.Address, iface, mac, ssid)
 }

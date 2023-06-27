@@ -22,7 +22,7 @@ func newLteCollector() routerOSCollector {
 }
 
 func (c *lteCollector) init() {
-	c.props = []string{"current-cellid", "primary-band" ,"ca-band", "rssi", "rsrp", "rsrq", "sinr"}
+	c.props = []string{"current-cellid", "primary-band", "ca-band", "rssi", "rsrp", "rsrq", "sinr"}
 	labelNames := []string{"name", "address", "interface", "cellid", "primaryband", "caband"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
@@ -92,7 +92,7 @@ func (c *lteCollector) collectForInterface(iface string, ctx *collectorContext) 
 
 func (c *lteCollector) collectMetricForProperty(property, iface string, re *proto.Sentence, ctx *collectorContext) {
 	desc := c.descriptions[property]
-	current_cellid := re.Map["current-cellid"]
+	currentcellid := re.Map["current-cellid"]
 	// get only band and its width, drop earfcn and phy-cellid info
 	primaryband := re.Map["primary-band"]
 	if primaryband != "" {
@@ -117,5 +117,5 @@ func (c *lteCollector) collectMetricForProperty(property, iface string, re *prot
 		return
 	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, current_cellid, primaryband, caband)
+	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, currentcellid, primaryband, caband)
 }

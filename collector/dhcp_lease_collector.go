@@ -14,8 +14,10 @@ type dhcpLeaseCollector struct {
 	descriptions *prometheus.Desc
 }
 
+const expiresAfter = "expires-after"
+
 func (c *dhcpLeaseCollector) init() {
-	c.props = []string{"active-mac-address", "server", "status", "expires-after", "active-address", "host-name"}
+	c.props = []string{"active-mac-address", "server", "status", expiresAfter, "active-address", "host-name"}
 
 	labelNames := []string{"name", "address", "activemacaddress", "server", "status", "expiresafter", "activeaddress", "hostname"}
 	c.descriptions = description("dhcp", "leases_metrics", "number of metrics", labelNames)
@@ -61,12 +63,12 @@ func (c *dhcpLeaseCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, er
 func (c *dhcpLeaseCollector) collectMetric(ctx *collectorContext, re *proto.Sentence) {
 	v := 1.0
 
-	f, err := parseDuration(re.Map["expires-after"])
+	f, err := parseDuration(re.Map[expiresAfter])
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device":   ctx.device.Name,
-			"property": "expires-after",
-			"value":    re.Map["expires-after"],
+			"property": expiresAfter,
+			"value":    re.Map[expiresAfter],
 			"error":    err,
 		}).Error("error parsing duration metric value")
 		return

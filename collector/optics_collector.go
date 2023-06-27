@@ -9,6 +9,9 @@ import (
 	"gopkg.in/routeros.v2/proto"
 )
 
+const sfpRxLoss = "sfp-rx-loss"
+const sfpTxFault = "sfp-tx-fault"
+
 type opticsCollector struct {
 	rxStatusDesc    *prometheus.Desc
 	txStatusDesc    *prometheus.Desc
@@ -32,7 +35,7 @@ func newOpticsCollector() routerOSCollector {
 		temperatureDesc: description(prefix, "temperature_celsius", "temperature in degree celsius", labelNames),
 		txBiasDesc:      description(prefix, "tx_bias_ma", "bias is milliamps", labelNames),
 		voltageDesc:     description(prefix, "voltage_volt", "volage in volt", labelNames),
-		props:           []string{"sfp-rx-loss", "sfp-tx-fault", "sfp-temperature", "sfp-supply-voltage", "sfp-tx-bias-current", "sfp-tx-power", "sfp-rx-power"},
+		props:           []string{sfpRxLoss, sfpTxFault, "sfp-temperature", "sfp-supply-voltage", "sfp-tx-bias-current", "sfp-tx-power", "sfp-rx-power"},
 	}
 }
 
@@ -119,7 +122,7 @@ func (c *opticsCollector) collectMetricsForInterface(name string, se *proto.Sent
 }
 
 func (c *opticsCollector) valueForKey(name, value string) (float64, error) {
-	if name == "sfp-rx-loss" || name == "sfp-tx-fault" {
+	if name == sfpRxLoss || name == sfpTxFault {
 		status := float64(1)
 		if value == "true" {
 			status = float64(0)
@@ -133,9 +136,9 @@ func (c *opticsCollector) valueForKey(name, value string) (float64, error) {
 
 func (c *opticsCollector) descForKey(name string) *prometheus.Desc {
 	switch name {
-	case "sfp-rx-loss":
+	case sfpRxLoss:
 		return c.rxStatusDesc
-	case "sfp-tx-fault":
+	case sfpTxFault:
 		return c.txStatusDesc
 	case "sfp-temperature":
 		return c.temperatureDesc
