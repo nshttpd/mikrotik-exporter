@@ -53,7 +53,13 @@ func (c *wlanIFCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
-	reply, err := ctx.client.Run("/interface/wireless/print", "?disabled=false", "=.proplist=name")
+	cmd := ""
+	if ctx.device.Wifiwave2 {
+		cmd = "/interface/wifiwave/print"
+	} else {
+		cmd = "/interface/wireless/print"
+	}
+	reply, err := ctx.client.Run(cmd, "?disabled=false", "=.proplist=name")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -71,7 +77,13 @@ func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, 
 }
 
 func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/wireless/monitor", fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
+	cmd := ""
+	if ctx.device.Wifiwave2 {
+		cmd = "/interface/wifiwave/monitor"
+	} else {
+		cmd = "/interface/wireless/monitor"
+	}
+	reply, err := ctx.client.Run(cmd, fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"interface": iface,

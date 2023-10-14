@@ -35,12 +35,13 @@ type Config struct {
 
 // Device represents a target device
 type Device struct {
-	Name     string    `yaml:"name"`
-	Address  string    `yaml:"address,omitempty"`
-	Srv      SrvRecord `yaml:"srv,omitempty"`
-	User     string    `yaml:"user"`
-	Password string    `yaml:"password"`
-	Port     string    `yaml:"port"`
+	Name      string    `yaml:"name"`
+	Address   string    `yaml:"address,omitempty"`
+	Srv       SrvRecord `yaml:"srv,omitempty"`
+	User      string    `yaml:"user"`
+	Password  string    `yaml:"password"`
+	Port      string    `yaml:"port"`
+	Wifiwave2 bool      `yaml:"wifiwave2"`
 }
 
 type SrvRecord struct {
