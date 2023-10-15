@@ -11,8 +11,9 @@ import (
 )
 
 type wlanIFCollector struct {
-	props        []string
-	descriptions map[string]*prometheus.Desc
+	props          []string
+	propsWifiwave2 []string
+	descriptions   map[string]*prometheus.Desc
 }
 
 func newWlanIFCollector() routerOSCollector {
@@ -23,11 +24,15 @@ func newWlanIFCollector() routerOSCollector {
 
 func (c *wlanIFCollector) init() {
 	c.props = []string{"channel", "registered-clients", "noise-floor", "overall-tx-ccq"}
+	// wifiwave2 has slightly different names
+	c.propsWifiwave2 = []string{"channel", "registered-peers"}
 	labelNames := []string{"name", "address", "interface", "channel"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
 		c.descriptions[p] = descriptionForPropertyName("wlan_interface", p, labelNames)
 	}
+	// add description for wifiwave2-specific properties to map to wireless ones
+	c.descriptions["registered-peers"] = descriptionForPropertyName("wlan_interface", "registered-clients", labelNames)
 }
 
 func (c *wlanIFCollector) describe(ch chan<- *prometheus.Desc) {
@@ -53,7 +58,13 @@ func (c *wlanIFCollector) collect(ctx *collectorContext) error {
 }
 
 func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, error) {
-	reply, err := ctx.client.Run("/interface/wireless/print", "?disabled=false", "=.proplist=name")
+	cmd := ""
+	if ctx.device.Wifiwave2 {
+		cmd = "/interface/wifiwave/print"
+	} else {
+		cmd = "/interface/wireless/print"
+	}
+	reply, err := ctx.client.Run(cmd, "?disabled=false", "=.proplist=name")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -71,7 +82,16 @@ func (c *wlanIFCollector) fetchInterfaceNames(ctx *collectorContext) ([]string, 
 }
 
 func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContext) error {
-	reply, err := ctx.client.Run("/interface/wireless/monitor", fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(c.props, ","))
+	cmd := ""
+	var props []string
+	if ctx.device.Wifiwave2 {
+		cmd = "/interface/wifiwave/monitor"
+		props = c.propsWifiwave2
+	} else {
+		cmd = "/interface/wireless/monitor"
+		props = c.props
+	}
+	reply, err := ctx.client.Run(cmd, fmt.Sprintf("=numbers=%s", iface), "=once=", "=.proplist="+strings.Join(props, ","))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"interface": iface,
@@ -81,7 +101,7 @@ func (c *wlanIFCollector) collectForInterface(iface string, ctx *collectorContex
 		return err
 	}
 
-	for _, p := range c.props[1:] {
+	for _, p := range props[1:] {
 		// there's always going to be only one sentence in reply, as we
 		// have to explicitly specify the interface
 		c.collectMetricForProperty(p, iface, reply.Re[0], ctx)

@@ -9,9 +9,20 @@ import (
 	"gopkg.in/routeros.v2/proto"
 )
 
+// from https://forum.mikrotik.com/viewtopic.php?t=195124#p999722:
+// wifiwave2 is an implementation of drivers from the manufacturer of the
+// chipset, rather than an in-house written driver (which wireless is). So
+// there are many small details that are missing or incomplete...
+
 type wlanSTACollector struct {
-	props        []string
-	descriptions map[string]*prometheus.Desc
+	// Both wifiwave2 and wireless have a similar, yet different API. They also
+	// expose a slightly different set of properties.
+	props               []string
+	propsWirelessExtra  []string
+	propsWirelessRXTX   []string
+	propsWifiwave2Extra []string
+	propsWifiwave2RXTX  []string
+	descriptions        map[string]*prometheus.Desc
 }
 
 func newWlanSTACollector() routerOSCollector {
@@ -21,13 +32,28 @@ func newWlanSTACollector() routerOSCollector {
 }
 
 func (c *wlanSTACollector) init() {
-	c.props = []string{"interface", "mac-address", "signal-to-noise", "signal-strength", "packets", "bytes", "frames"}
+	// common properties
+	c.props = []string{"interface", "mac-address"}
+	// wifiwave2 doesn't expose SNR, and uses different name for signal-strength
+	c.propsWirelessExtra = []string{"signal-to-noise", "signal-strength"}
+	// wireless exposes extra field "frames", not available in wifiwave2
+	c.propsWirelessRXTX = []string{"packets", "bytes", "frames"}
+	c.propsWifiwave2Extra = []string{"signal"}
+	c.propsWifiwave2RXTX = []string{"packets", "bytes"}
+	// all metrics have the same label names
 	labelNames := []string{"name", "address", "interface", "mac_address"}
 	c.descriptions = make(map[string]*prometheus.Desc)
-	for _, p := range c.props[:len(c.props)-3] {
+	for _, p := range c.propsWirelessExtra {
 		c.descriptions[p] = descriptionForPropertyName("wlan_station", p, labelNames)
 	}
-	for _, p := range c.props[len(c.props)-3:] {
+	// normalize the metric name 'signal-strength' for the property "signal", so that dashboards
+	// that capture both wireless and wifiwave2 devices don't need to normalize
+	c.descriptions["signal"] = descriptionForPropertyName("wlan_station", "signal-strength", labelNames)
+	for _, p := range c.propsWirelessRXTX {
+		c.descriptions["tx_"+p] = descriptionForPropertyName("wlan_station", "tx_"+p, labelNames)
+		c.descriptions["rx_"+p] = descriptionForPropertyName("wlan_station", "rx_"+p, labelNames)
+	}
+	for _, p := range c.propsWifiwave2RXTX {
 		c.descriptions["tx_"+p] = descriptionForPropertyName("wlan_station", "tx_"+p, labelNames)
 		c.descriptions["rx_"+p] = descriptionForPropertyName("wlan_station", "rx_"+p, labelNames)
 	}
@@ -53,7 +79,24 @@ func (c *wlanSTACollector) collect(ctx *collectorContext) error {
 }
 
 func (c *wlanSTACollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
-	reply, err := ctx.client.Run("/interface/wireless/registration-table/print", "=.proplist="+strings.Join(c.props, ","))
+	var cmd []string
+	var props []string = c.props
+	if ctx.device.Wifiwave2 {
+		props = append(props, c.propsWifiwave2Extra...)
+		props = append(props, c.propsWifiwave2RXTX...)
+		cmd = []string{
+			"/interface/wifiwave2/registration-table/print",
+			"=.proplist=" + strings.Join(props, ","),
+		}
+	} else {
+		props = append(props, c.propsWirelessExtra...)
+		props = append(props, c.propsWirelessRXTX...)
+		cmd = []string{
+			"/interface/wireless/registration-table/print",
+			"=.proplist=" + strings.Join(props, ","),
+		}
+	}
+	reply, err := ctx.client.Run(cmd...)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
@@ -69,11 +112,20 @@ func (c *wlanSTACollector) collectForStat(re *proto.Sentence, ctx *collectorCont
 	iface := re.Map["interface"]
 	mac := re.Map["mac-address"]
 
-	for _, p := range c.props[2 : len(c.props)-3] {
-		c.collectMetricForProperty(p, iface, mac, re, ctx)
-	}
-	for _, p := range c.props[len(c.props)-3:] {
-		c.collectMetricForTXRXCounters(p, iface, mac, re, ctx)
+	if ctx.device.Wifiwave2 {
+		for _, p := range c.propsWifiwave2Extra {
+			c.collectMetricForProperty(p, iface, mac, re, ctx)
+		}
+		for _, p := range c.propsWifiwave2RXTX {
+			c.collectMetricForTXRXCounters(p, iface, mac, re, ctx)
+		}
+	} else {
+		for _, p := range c.propsWirelessExtra {
+			c.collectMetricForProperty(p, iface, mac, re, ctx)
+		}
+		for _, p := range c.propsWirelessRXTX {
+			c.collectMetricForTXRXCounters(p, iface, mac, re, ctx)
+		}
 	}
 }
 

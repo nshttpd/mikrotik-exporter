@@ -65,6 +65,7 @@ devices:
     port: 8999
     user: prometheus2
     password: password_to_second_router
+    wifiwave2: true
   - name: routers_srv_dns
     srv:
       record: _mikrotik._udp.example.com
@@ -87,11 +88,17 @@ features:
   routes: true
   pools: true
   optics: true
+  wlanif: true
+  wlansta: true
 ```
 
 If you add a devices with the `srv` parameter instead of `address` the exporter will perform a DNS query
 to obtain the SRV record and discover the devices dynamically. Also, you can specify a DNS server to use
 on the query.
+
+Use the option `wifiwave2: true` for devices that have the `wifiwave2` package,
+which replaces the `wireless` implementation, installed. This is necessary as `wifiwave2` has a slightly
+different API and exposes a slightly smaller set of attributes (for example, no signal-to-noise, etc.)
 
 
 ###### example output
