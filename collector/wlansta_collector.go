@@ -96,7 +96,6 @@ func (c *wlanSTACollector) fetch(ctx *collectorContext) ([]*proto.Sentence, erro
 			"=.proplist=" + strings.Join(props, ","),
 		}
 	}
-	log.Debugf("Running collector command: %s", cmd)
 	reply, err := ctx.client.Run(cmd...)
 	if err != nil {
 		log.WithFields(log.Fields{
