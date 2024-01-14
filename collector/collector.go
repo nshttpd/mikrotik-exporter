@@ -354,7 +354,7 @@ func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Met
 		ctx := &collectorContext{ch, d, cl}
 		err = co.collect(ctx)
 		if err != nil {
-			return err
+			log.Error("error collecting metrics")
 		}
 	}
 
