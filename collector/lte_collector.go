@@ -22,7 +22,7 @@ func newLteCollector() routerOSCollector {
 }
 
 func (c *lteCollector) init() {
-	c.props = []string{"current-cellid", "primary-band" ,"ca-band", "rssi", "rsrp", "rsrq", "sinr"}
+	c.props = []string{"current-cellid", "primary-band", "ca-band", "rssi", "rsrp", "rsrq", "sinr", "lac", "sector-id", "phy-cellid", "cqi", "session-uptime"}
 	labelNames := []string{"name", "address", "interface", "cellid", "primaryband", "caband"}
 	c.descriptions = make(map[string]*prometheus.Desc)
 	for _, p := range c.props {
@@ -106,16 +106,31 @@ func (c *lteCollector) collectMetricForProperty(property, iface string, re *prot
 	if re.Map[property] == "" {
 		return
 	}
-	v, err := strconv.ParseFloat(re.Map[property], 64)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"property":  property,
-			"interface": iface,
-			"device":    ctx.device.Name,
-			"error":     err,
-		}).Error("error parsing interface metric value")
-		return
-	}
 
-	ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, current_cellid, primaryband, caband)
+	if property == "session-uptime" {
+		v, err := parseDuration(re.Map[property])
+		if err != nil {
+			log.WithFields(log.Fields{
+				"property":  property,
+				"interface": iface,
+				"device":    ctx.device.Name,
+				"error":     err,
+			}).Error("error parsing interface duration metric value")
+			return
+		}
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, v, ctx.device.Name, ctx.device.Address, iface, current_cellid, primaryband, caband)
+		return
+	} else {
+		v, err := strconv.ParseFloat(re.Map[property], 64)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"property":  property,
+				"interface": iface,
+				"device":    ctx.device.Name,
+				"error":     err,
+			}).Error("error parsing interface metric value")
+			return
+		}
+		ctx.ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v, ctx.device.Name, ctx.device.Address, iface, current_cellid, primaryband, caband)
+	}
 }
