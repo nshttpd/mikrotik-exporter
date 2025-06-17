@@ -6,7 +6,10 @@ devices:
   - name: test2
     address: 192.168.2.1
     user: test
-    password: 123
+    password: '123'
+    port: '324'
+    tls: true
+    insecure: true
 
 features:
   bgp: true
