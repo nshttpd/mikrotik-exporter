@@ -1,4 +1,4 @@
-FROM debian:9.9-slim
+FROM debian:12.12-slim
 
 EXPOSE 9436
 
