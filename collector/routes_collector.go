@@ -62,6 +62,14 @@ func (c *routesCollector) colllectForIPVersion(ipVersion, topic string, ctx *col
 func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", "=count-only=")
 	if err != nil {
+		// Handle empty response as "no routes" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device":     ctx.device.Name,
+				"ip_version": ipVersion,
+			}).Debug("no routes found")
+			return nil
+		}
 		log.WithFields(log.Fields{
 			"ip_version": ipVersion,
 			"device":     ctx.device.Name,
@@ -90,6 +98,10 @@ func (c *routesCollector) colllectCount(ipVersion, topic string, ctx *collectorC
 func (c *routesCollector) colllectCountProtcol(ipVersion, topic, protocol string, ctx *collectorContext) error {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/route/print", topic), "?disabled=false", fmt.Sprintf("?%s", protocol), "=count-only=")
 	if err != nil {
+		// Handle empty response as "no routes for protocol" (not an error)
+		if isEmptyResponse(err) {
+			return nil
+		}
 		log.WithFields(log.Fields{
 			"ip_version": ipVersion,
 			"protocol":   protocol,

@@ -52,10 +52,17 @@ func (c *ipsecCollector) collect(ctx *collectorContext) error {
 func (c *ipsecCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/ip/ipsec/policy/print", "?disabled=false", "?dynamic=false", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
+		// Handle empty response as "no IPsec policies configured" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device": ctx.device.Name,
+			}).Debug("no IPsec policies configured")
+			return []*proto.Sentence{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,
-		}).Error("error fetching interface metrics")
+		}).Error("error fetching ipsec metrics")
 		return nil, err
 	}
 

@@ -56,6 +56,13 @@ func (c *bgpCollector) collect(ctx *collectorContext) error {
 func (c *bgpCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/routing/bgp/peer/print", "=.proplist="+strings.Join(c.props, ","))
 	if err != nil {
+		// Handle empty response as "no BGP peers configured" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device": ctx.device.Name,
+			}).Debug("no BGP peers configured")
+			return []*proto.Sentence{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,

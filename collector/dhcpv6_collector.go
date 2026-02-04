@@ -48,6 +48,13 @@ func (c *dhcpv6Collector) collect(ctx *collectorContext) error {
 func (c *dhcpv6Collector) fetchDHCPServerNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/ipv6/dhcp-server/print", "=.proplist=name")
 	if err != nil {
+		// Handle empty response as "no DHCPv6 servers configured" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device": ctx.device.Name,
+			}).Debug("no DHCPv6 servers configured")
+			return []string{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,

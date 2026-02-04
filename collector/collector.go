@@ -357,15 +357,22 @@ func (c *collector) connectAndCollect(d *config.Device, ch chan<- prometheus.Met
 	}
 	defer cl.Close()
 
+	var lastErr error
 	for _, co := range c.collectors {
 		ctx := &collectorContext{ch, d, cl}
 		err = co.collect(ctx)
 		if err != nil {
-			log.Error("error collecting metrics")
+			// Log the error but continue to other collectors
+			log.WithFields(log.Fields{
+				"device": d.Name,
+				"error":  err,
+			}).Warn("collector error (continuing with other collectors)")
+			lastErr = err
 		}
 	}
 
-	return nil
+	// Return last error for metrics, but all collectors have run
+	return lastErr
 }
 
 func (c *collector) connect(d *config.Device) (*routeros.Client, error) {
