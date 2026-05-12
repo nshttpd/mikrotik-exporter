@@ -3,9 +3,27 @@ package collector
 import (
 	"math"
 	"testing"
+	"unicode/utf8"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCleanLabelValue(t *testing.T) {
+	// "künden." encoded as Windows-1252/Latin-1, as returned by some RouterOS devices.
+	invalid := "k\xfcnden."
+
+	assert.False(t, utf8.ValidString(invalid))
+
+	cleaned := cleanLabelValue(invalid)
+	assert.True(t, utf8.ValidString(cleaned))
+	assert.Equal(t, "künden.", cleanLabelValue("künden."))
+
+	desc := prometheus.NewDesc("test_metric", "", []string{"comment"}, nil)
+	assert.NotPanics(t, func() {
+		prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, 1, cleaned)
+	})
+}
 
 func TestSplitStringToFloats(t *testing.T) {
 	var testCases = []struct {
