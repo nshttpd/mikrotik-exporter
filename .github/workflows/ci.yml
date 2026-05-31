@@ -75,7 +75,7 @@ jobs:
       - name: Build and Push with ko
         run: |
           export KO_DOCKER_REPO="ghcr.io/${{ github.repository }}"
-          ko build . --tag="${{ env.VERSION_TAG }}"
+          ko build . --tags="${{ env.VERSION_TAG }}"
         env:
           VERSION: ${{ env.APP_VERSION }}
           SHORTSHA: ${{ env.SHORTSHA }}
