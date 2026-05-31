@@ -1,0 +1,10 @@
+defaultPlatforms:
+  - linux/amd64
+  - linux/arm64
+
+builds:
+  - id: mikrotik-exporter
+    main: .
+    ldflags:
+      - -X main.appVersion={{.Env.VERSION}}
+      - -X main.shortSha={{.Env.SHORTSHA}}
