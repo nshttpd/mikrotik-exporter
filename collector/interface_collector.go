@@ -102,7 +102,8 @@ func (c *interfaceCollector) collectMetricForProperty(property string, re *proto
 			}
 		}
 		ctx.ch <- prometheus.MustNewConstMetric(desc, vtype, v, ctx.device.Name, ctx.device.Address,
-			re.Map["name"], re.Map["type"], re.Map["disabled"], re.Map["comment"], re.Map["running"], re.Map["slave"])
+			cleanLabelValue(re.Map["name"]), cleanLabelValue(re.Map["type"]), cleanLabelValue(re.Map["disabled"]),
+			cleanLabelValue(re.Map["comment"]), cleanLabelValue(re.Map["running"]), cleanLabelValue(re.Map["slave"]))
 
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -22,6 +23,17 @@ func init() {
 
 func metricStringCleanup(in string) string {
 	return strings.Replace(in, "-", "_", -1)
+}
+
+// cleanLabelValue replaces invalid UTF-8 byte sequences with the Unicode
+// replacement character so that free-form RouterOS fields such as interface
+// comments, which may use a non-UTF-8 encoding, do not crash
+// prometheus.MustNewConstMetric.
+func cleanLabelValue(in string) string {
+	if utf8.ValidString(in) {
+		return in
+	}
+	return strings.ToValidUTF8(in, "�")
 }
 
 func descriptionForPropertyName(prefix, property string, labelNames []string) *prometheus.Desc {
