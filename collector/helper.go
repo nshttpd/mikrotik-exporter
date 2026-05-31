@@ -74,6 +74,15 @@ func splitStringToFloats(metric string) (float64, float64, error) {
 	return m1, m2, nil
 }
 
+// isEmptyResponse checks if the error is a RouterOS "!empty" response
+// which indicates no data was found (not a real error)
+func isEmptyResponse(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "!empty")
+}
+
 func parseDuration(duration string) (float64, error) {
 	var u time.Duration
 

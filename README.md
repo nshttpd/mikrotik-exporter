@@ -1,11 +1,10 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/nshttpd/mikrotik-exporter.svg)](https://hub.docker.com/r/nshttpd/mikrotik-exporter/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/drumsergio/mikrotik-exporter.svg)](https://hub.docker.com/r/drumsergio/mikrotik-exporter/)
 
 ## prometheus-mikrotik
 
 tl;dr - prometheus exporter for mikrotik devices
 
-This is still a work in progress .. consider `master` at the moment as a preview
-release.
+Fork of [nshttpd/mikrotik-exporter](https://github.com/nshttpd/mikrotik-exporter) with improved error handling, per-device feature toggles, and DHCP lease metrics.
 
 #### Description
 
@@ -16,6 +15,14 @@ be required that has read-only access to the device configuration via the API.
 
 Currently the exporter collects metrics for interfaces and system resources. Others
 can be added as long as published via the API.
+
+#### Docker
+
+```bash
+docker pull drumsergio/mikrotik-exporter:trunk
+```
+
+Multi-arch image (linux/amd64, linux/arm64) built automatically via GitHub Actions.
 
 #### Mikrotik Config
 
@@ -112,5 +119,3 @@ mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether6",name="my_route
 mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether7",name="my_router"} 3.18354425e+08
 mikrotik_interface_tx_byte{address="10.10.0.1",interface="ether8",name="my_router"} 1.86405031e+08
 ```
-
- 

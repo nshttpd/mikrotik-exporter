@@ -52,6 +52,14 @@ func (c *poolCollector) collectForIPVersion(ipVersion, topic string, ctx *collec
 func (c *poolCollector) fetchPoolNames(ipVersion, topic string, ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run(fmt.Sprintf("/%s/pool/print", topic), "=.proplist=name")
 	if err != nil {
+		// Handle empty response as "no pools configured" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device":     ctx.device.Name,
+				"ip_version": ipVersion,
+			}).Debug("no IP pools configured")
+			return []string{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,

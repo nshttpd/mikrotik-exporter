@@ -55,6 +55,13 @@ func (c *healthCollector) collect(ctx *collectorContext) error {
 func (c *healthCollector) fetch(ctx *collectorContext) ([]*proto.Sentence, error) {
 	reply, err := ctx.client.Run("/system/health/print")
 	if err != nil {
+		// Handle empty response as "no health data available" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device": ctx.device.Name,
+			}).Debug("no health metrics available on this device")
+			return []*proto.Sentence{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,

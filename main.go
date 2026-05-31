@@ -207,87 +207,97 @@ func createMetricsHandler() (http.Handler, error) {
 		}), nil
 }
 
+// featureEnabled checks if a feature is enabled via CLI flag or config
+func featureEnabled(cliFlag bool, configVal *bool) bool {
+	if cliFlag {
+		return true
+	}
+	if configVal != nil && *configVal {
+		return true
+	}
+	return false
+}
+
 func collectorOptions() []collector.Option {
 	opts := []collector.Option{}
 
-	if *withBgp || cfg.Features.BGP {
+	if featureEnabled(*withBgp, cfg.Features.BGP) {
 		opts = append(opts, collector.WithBGP())
 	}
 
-	if *withRoutes || cfg.Features.Routes {
+	if featureEnabled(*withRoutes, cfg.Features.Routes) {
 		opts = append(opts, collector.WithRoutes())
 	}
 
-	if *withDHCP || cfg.Features.DHCP {
+	if featureEnabled(*withDHCP, cfg.Features.DHCP) {
 		opts = append(opts, collector.WithDHCP())
 	}
 
-	if *withDHCPL || cfg.Features.DHCPL {
+	if featureEnabled(*withDHCPL, cfg.Features.DHCPL) {
 		opts = append(opts, collector.WithDHCPL())
 	}
 
-	if *withDHCPv6 || cfg.Features.DHCPv6 {
+	if featureEnabled(*withDHCPv6, cfg.Features.DHCPv6) {
 		opts = append(opts, collector.WithDHCPv6())
 	}
 
-	if *withFirmware || cfg.Features.Firmware {
+	if featureEnabled(*withFirmware, cfg.Features.Firmware) {
 		opts = append(opts, collector.WithFirmware())
 	}
 
-	if *withHealth || cfg.Features.Health {
+	if featureEnabled(*withHealth, cfg.Features.Health) {
 		opts = append(opts, collector.WithHealth())
 	}
 
-	if *withPOE || cfg.Features.POE {
+	if featureEnabled(*withPOE, cfg.Features.POE) {
 		opts = append(opts, collector.WithPOE())
 	}
 
-	if *withPools || cfg.Features.Pools {
+	if featureEnabled(*withPools, cfg.Features.Pools) {
 		opts = append(opts, collector.WithPools())
 	}
 
-	if *withOptics || cfg.Features.Optics {
+	if featureEnabled(*withOptics, cfg.Features.Optics) {
 		opts = append(opts, collector.WithOptics())
 	}
 
-	if *withW60G || cfg.Features.W60G {
+	if featureEnabled(*withW60G, cfg.Features.W60G) {
 		opts = append(opts, collector.WithW60G())
 	}
 
-	if *withWlanSTA || cfg.Features.WlanSTA {
+	if featureEnabled(*withWlanSTA, cfg.Features.WlanSTA) {
 		opts = append(opts, collector.WithWlanSTA())
 	}
 
-	if *withCapsman || cfg.Features.Capsman {
+	if featureEnabled(*withCapsman, cfg.Features.Capsman) {
 		opts = append(opts, collector.WithCapsman())
 	}
 
-	if *withWlanIF || cfg.Features.WlanIF {
+	if featureEnabled(*withWlanIF, cfg.Features.WlanIF) {
 		opts = append(opts, collector.WithWlanIF())
 	}
 
-	if *withMonitor || cfg.Features.Monitor {
+	if featureEnabled(*withMonitor, cfg.Features.Monitor) {
 		opts = append(opts, collector.Monitor())
-
 	}
 
-	if *withIpsec || cfg.Features.Ipsec {
+	if featureEnabled(*withIpsec, cfg.Features.Ipsec) {
 		opts = append(opts, collector.WithIpsec())
 	}
 
-	if *withConntrack || cfg.Features.Conntrack {
+	if featureEnabled(*withConntrack, cfg.Features.Conntrack) {
 		opts = append(opts, collector.WithConntrack())
 	}
 
-	if *withLte || cfg.Features.Lte {
+	if featureEnabled(*withLte, cfg.Features.Lte) {
 		opts = append(opts, collector.WithLte())
 	}
 
-	if *withNetwatch || cfg.Features.Netwatch {
+	if featureEnabled(*withNetwatch, cfg.Features.Netwatch) {
 		opts = append(opts, collector.WithNetwatch())
 	}
 
-	if *withCloud || cfg.Features.Cloud {
+	if featureEnabled(*withCloud, cfg.Features.Cloud) {
 		opts = append(opts, collector.WithCloud())
 	}
 

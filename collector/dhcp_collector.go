@@ -48,6 +48,13 @@ func (c *dhcpCollector) collect(ctx *collectorContext) error {
 func (c *dhcpCollector) fetchDHCPServerNames(ctx *collectorContext) ([]string, error) {
 	reply, err := ctx.client.Run("/ip/dhcp-server/print", "=.proplist=name")
 	if err != nil {
+		// Handle empty response as "no DHCP servers configured" (not an error)
+		if isEmptyResponse(err) {
+			log.WithFields(log.Fields{
+				"device": ctx.device.Name,
+			}).Debug("no DHCP servers configured")
+			return []string{}, nil
+		}
 		log.WithFields(log.Fields{
 			"device": ctx.device.Name,
 			"error":  err,
